@@ -1,0 +1,32 @@
+.cjs-div{
+    width: 100%;
+    border: 2px dashed #ccc;
+}
+
+.cjs-card-div{
+    margin:8px;
+}
+
+.cjs-btn{
+    margin-right: 8px;
+}
+
+.cjs-panel-button{
+    margin-right: 8px;
+}
+.cjs-pn-tag:focus{
+    background-color: skyblue;
+    outline: none;
+}
+
+.cjs-pn-tag{
+    border: 1px solid #ccc;
+    padding: 4px 10px 4px 10px;
+    border-radius: 8px 8px 0px 0px;
+    background-color: white;
+}
+
+.cjs-pn-div{
+    border: 1px solid #ccc;
+    margin-bottom: 8px;
+}
