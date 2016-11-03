@@ -10,9 +10,9 @@ card.js用于简化动态生成网页时的代码编写过程。
 通常一个网页可以划分成不同的部分，每个部分都有自己的事件响应函数。  
 从零开始手工编写要考虑不同部分的id分配，事件绑定以及删除解绑问题。  
 card.js的设计目的就是简化这些工作。  
-它将网页每个部分看成一个“卡片”，通过调用card.js里的CARD对象创建及绑定事件。
-多个CARD可以集合成一个PAGE，然后通过PANEL实现多个PAGE之间动态切换。
-（PANEL可以类比为网页常见的导航栏）
+它将网页每个部分看成一个“卡片”，通过调用card.js里的CARD对象创建及绑定事件。  
+多个CARD可以集合成一个PAGE，然后通过PANEL实现多个PAGE之间动态切换。  
+（PANEL可以类比看成网页的导航栏）  
   
 ###card.js组成部分  
 cjs.f 通用小函数  
@@ -24,14 +24,15 @@ cjs.o 存放各通过card.js制作出来的对象，供PAGE及PANEL调用。
 ###示例    
 一个简单的“卡片”大概长这样子：  
 ```js
-// js/eg.js
-// 生成一个cardjs实例。
+// src/js/eg.js
+
+// 创建cardjs实例。
 var eg = cardjs.cNew();
 
 eg.o.simple_card = {
     cNew: function (container_id) {
 
-        // 创建一个cjs.CARD实例。
+        // 创建cjs.CARD实例。
         var scard = eg.CARD.cNew(container_id);
 
         // 生成界面代码
@@ -62,8 +63,8 @@ eg.o.simple_card = {
     </body>
 </html>
 ```
-这么多代码就显示一行字也太麻烦了对吧？
-但有了上面的工作后动态切换多个“卡片”就很简单：
+这么多代码就显示一行字也太麻烦了对吧？  
+但有了上面的工作后动态切换多个“卡片”就很简单： 
 ```js
 eg.o.my_panel = {
     cNew: function (container_id) {
@@ -76,10 +77,10 @@ eg.o.my_panel = {
     }
 };
 ```
-上面这个例子很无聊，只是不断的显示“这是一个 ...”。
-更详细的例子请看src里的example
-  
-###协议
+上面这个例子很无聊，只是不断的显示“这是一个 ...”。  
+更详细的例子请看src里的example  
+
+###协议  
 GPLv3  
   
-  [1]: http://aaa.png
+  [1]: https://raw.githubusercontent.com/jjling2011/card.js/master/readme/example_html.png
