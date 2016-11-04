@@ -203,13 +203,14 @@ var cardjs = {
 
                 function remove_evs_on() {
                     if (card.cjsv.evs.length > 0) {
+                        //console.log(card.cjsv.evs);
                         for (var key in card.cjsv.evs) {
                             //console.log(card.cjsv.evs);
                             if (card.cjsv.evs[key]) {
                                 card.f.off(card.cjsv.evs[key][0], key, card.cjsv.evs[key][1]);
                                 delete card.cjsv.evs[key];
                             }
-                            //console.log(this);
+                            
                         }
                         card.cjsv.evs = [];
                     }
@@ -307,20 +308,24 @@ var cardjs = {
             }
         };
         cjs.PANEL = {
-            cNew: function (container_id, pages, cjs_tag_style, cjs_div_style) {
+            cNew: function (container_id, pages, cjs_panel_style) {
                 var pn = cjs.CARD.cNew(container_id);
 
                 pn.f.merge({
                     id_header: 'panel',
-                    add_event: true
+                    add_event: true,
+                    style: cjs_panel_style
                 });
+
                 pn.cjsv.cur_page = null;
 
                 pn.pages = pages;
+
                 if (!Array.isArray(pn.pages) || pn.pages.length <= 0) {
                     throw 'PANEL(container_id, pages) pages should be an array. \n'
                             + 'eg. ["MainPage",["top_card","middle_card","bottom_card"]]';
                 }
+
                 pn.settings.id_num = pn.pages.length + 1;
 
                 pn.clean_up = function () {
@@ -330,13 +335,18 @@ var cardjs = {
                     }
                     pn.cjsv.cur_page = null;
                 };
+
                 pn.show_page = function (n) {
                     var num = pn.pages.length;
                     // 改用css控制显示效果
                     pn.clean_up();
-                    pn.cjsv.cur_page = cjs.PAGE.cNew(pn.ids[num], pn.pages[n][1]);
+                    pn.cjsv.cur_page = cjs.PAGE.cNew(
+                            pn.ids[num],
+                            pn.pages[n][1],
+                            pn.settings.style['card']);
                     pn.cjsv.cur_page.show();
                 };
+
                 pn.gen_ev_handler = function () {
                     pn.ev_handler = [];
                     for (var i = 0; i < pn.pages.length; ++i) {
@@ -361,8 +371,8 @@ var cardjs = {
                     if (num > 0) {
                         html += '<div>';
                         for (var i = 0; i < num; ++i) {
-                            if (cjs_tag_style) {
-                                html += '<input type="button" class="' + cjs.f.html_escape(cjs_tag_style) + '"'
+                            if (pn.settings.style['tag']) {
+                                html += '<input type="button" class="' + cjs.f.html_escape(pn.settings.style['tag']) + '"'
                                         + ' id="' + pn.ids[i] + '" value="' + pn.pages[i][0] + '" >';
                             } else {
                                 html += '<input type="button" id="' + pn.ids[i] + '" value="' + pn.pages[i][0] + '" >';
@@ -372,8 +382,8 @@ var cardjs = {
                     }
 
                     html += '<div id="' + pn.ids[num] + '" ';
-                    if (cjs_div_style) {
-                        html += ' class="' + cjs.f.html_escape(cjs_div_style) + '" ';
+                    if (pn.settings.style['page']) {
+                        html += ' class="' + cjs.f.html_escape(pn.settings.style['page']) + '" ';
                     }
                     html += ' ></div></div>';
                     return html;
@@ -383,10 +393,14 @@ var cardjs = {
         };
 
         cjs.PAGE = {
-            cNew: function (container_id, cards) {
+            cNew: function (container_id, cards, cjs_page_style) {
                 var pg = cjs.CARD.cNew(container_id);
+
                 pg.settings.id_header = 'page';
+                pg.settings.style = cjs_page_style;
+
                 pg.cards = [];
+
                 pg.data_parser = function () {
                     if (!Array.isArray(cards) || cards.length <= 0) {
                         throw 'Error: PAGE(container_id,cards) cards should be an array!';
@@ -394,13 +408,21 @@ var cardjs = {
                     pg.data = cards;
                     pg.settings.id_num = pg.data.length;
                 };
+
                 pg.gen_html = function () {
                     var html = '';
                     for (var i = 0; i < pg.data.length; ++i) {
-                        html += '<div style="width:100%;" id="' + pg.ids[i] + '" ></div>';
+                        if (pg.settings.style) {
+                            html += '<div id="' + pg.ids[i] + '" class="' +
+                                    cjs.f.html_escape(pg.settings.style) +
+                                    '" ></div>';
+                        } else {
+                            html += '<div id="' + pg.ids[i] + '" ></div>';
+                        }
                     }
                     return html;
                 };
+
                 pg.before_add_event = function () {
                     pg.clean_up();
                     pg.data.forEach(function (e, i) {
@@ -411,6 +433,7 @@ var cardjs = {
                         }
                     });
                 };
+
                 pg.clean_up = function () {
                     pg.cards.forEach(function (e) {
                         if (e) {

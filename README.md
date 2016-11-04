@@ -2,7 +2,7 @@ card.js用于简化动态生成网页时的代码编写过程。
 主要部分详见 `src/lib/card.js` 及 `src/serv.php`   
 使用方法详见示例 `example.html` 及 `example.js`  
   
-效果图：  
+###效果图    
 ![example.html效果图][1]  
   
 ###详情  
@@ -70,7 +70,7 @@ eg.o.my_panel = {
     cNew: function (container_id) {
         var mp = eg.PANEL.cNew(container_id, [
             ['三个卡片', ['simple_card','simple_card','simple_card']],
-            ['单个卡片', ['simple_card']]);
+            ['单个卡片', ['simple_card']]]);
         mp.show();
         mp.show_page(1);
         return mp;
