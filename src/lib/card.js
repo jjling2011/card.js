@@ -8,10 +8,11 @@
 var cardjs = {
     cNew: function () {
         var cjs = {
-            //存放通过cardjs生成的对象,在CARD/PAGE/PANEL之间相互调用。
+            //存放通过cardjs生成的对象,在PAGE/PANEL之间相互调用。
             o: {}
         };
-        //各通用函数
+
+        //各通用小函数
         cjs.f = {
             html_escape: function (unsafe) {
                 return unsafe
@@ -105,59 +106,97 @@ var cardjs = {
                 var mydate = new Date(d);
                 return (('0' + mydate.getHours()).slice(-2) + ':' + ('0' + mydate.getMinutes()).slice(-2));
             }
-
         };
+
         cjs.CARD = {
             cNew: function (container_id) {
                 var card = {
-                    f: {}
+                    self: document.getElementById(container_id),
+                    // 各个设置项
+                    settings: {
+                        /* 
+                         * 读取服务器数据会花点时间，如果n毫秒后还没读取到则提示刷新。 
+                         * 默认0代表不显示提示信息。
+                         */
+                        loading_tip_delay: 0,
+                        // 服务页面url
+                        server_page: 'serv.php',
+                        // 这个卡片有几个需要设置 id 的 html 元素
+                        id_num: 0,
+                        /* 
+                         * 你希望生成的id以什么开头。
+                         * 生成的id通常像这样： id头_16位随机数_0开始递增
+                         */
+                        id_header: 'id',
+                        // 这个卡片是否需要绑定事件
+                        add_event: false,
+                        /*
+                         * 调用refresh()时，向server_page发送什么参数
+                         * 例如：fetch:['echo_str','hellooooooo']
+                         * 详见 card.f.fetch()
+                         */
+                        fetch: false,
+                        // 显示debug信息 
+                        verbose: false
+                    },
+                    /* 
+                     * CARD内部使用的变量，设个奇怪的名包装起来不用占太多变量名。
+                     * fyi. cjsv = cardjs_variables
+                     */
+                    cjsv: {
+                        timer: [],
+                        evs: [],
+                        container_id: container_id,
+                        loading_tip_timer: null,
+                        event_flag: false
+                    }
                 };
+
+                // 各种小函数
                 card.f = {
                     on: function (event, obj_index, handler_index) {
+                        // 绑定事件
                         card.objs[obj_index].addEventListener(event, card.ev_handler[handler_index], false);
                         card.cjsv.evs[obj_index] = [event, handler_index];
-                        //console.log(card.cjsv.evs);
                     },
                     off: function (event, obj_index, handler_index) {
+                        // 解绑事件
                         card.objs[obj_index].removeEventListener(event, card.ev_handler[handler_index], false);
                         if (card.cjsv.evs[obj_index]) {
                             delete card.cjsv.evs[obj_index];
-                            //console.log(card.cjsv.evs);
                         }
                     },
                     merge: function (s) {
+                        // 合并选项
                         for (var key in s) {
                             card.settings[key] = s[key];
                         }
                     },
                     clear_timer: function (num) {
-                        // console.log('clear_timer:');
                         num = num || 0;
-                        // console.log(this);
                         if (card.cjsv.timer[num]) {
                             clearInterval(card.cjsv.timer[num]);
                         }
                         card.cjsv.timer = [];
                     },
                     set_timer: function (call_back, interval, num) {
-                        // console.log('set_timer:');
                         num = num || 0;
                         interval = interval || 3000;
                         card.f.clear_timer(num);
                         call_back();
                         card.cjsv.timer[num] = setInterval(call_back, interval);
                     },
-                    show_loading_tip: function (id) {
+                    show_loading_tip: function () {
+                        var self = card.self;
                         if (card.settings.loading_tip_delay > 0) {
                             if (card.cjsv.loading_tip_timer) {
                                 clearTimeout(card.cjsv.loading_tip_timer);
                             }
                             card.cjsv.loading_tip_timer =
                                     setTimeout(function () {
-                                        document.getElementById(id).innerHTML =
-                                                '加载中... 长时间无反应可以 ' +
+                                        self.innerHTML = '加载中... 长时间无反应可以 ' +
                                                 '<a href="#" onclick="window.location.reload(true);">刷新一下</a>';
-                                    }.bind(id), card.settings.loading_tip_delay);
+                                    }.bind(self), card.settings.loading_tip_delay);
                         }
                     },
                     fetch: function (op, param, func, verbose) {
@@ -185,38 +224,36 @@ var cardjs = {
                             }
                         };
                         xhr.send(encodeURI('op=' + op + '&data=' + param));
-                    },
-                    set_html: function (html) {
-                        document.getElementById(card.cjsv.container_id).innerHTML = html;
                     }
                 };
-                function get_virtual_method(func_name) {
+
+                // 生成一个虚方法，创建CARD实例时必须重写这个方法。
+                function gen_virtual_method(func_name) {
                     var fn = [].concat(func_name);
                     fn.forEach(function (e) {
                         card[e] = function () {
                             if (card.settings.verbose) {
-                                console.log('CARD.' + fn + '(): please rewrite this function!');
+                                console.log('CARD.' + fn + '(): please rewrite this method!');
                             }
                             return false;
                         };
                     });
                 }
 
+                // 自动释放通过 card.f.on 绑定的事件。后面的 remove_event 是手动。
                 function release_event() {
                     if (card.cjsv.evs.length > 0) {
-                        //console.log(card.cjsv.evs);
                         for (var key in card.cjsv.evs) {
-                            //console.log(card.cjsv.evs);
                             if (card.cjsv.evs[key]) {
                                 card.f.off(card.cjsv.evs[key][0], key, card.cjsv.evs[key][1]);
                                 delete card.cjsv.evs[key];
                             }
-                            
                         }
                         card.cjsv.evs = [];
                     }
                 }
 
+                // 如果card中有就调用，没有就显示一行debug信息。
                 function call_method(fn, warn) {
                     if (fn in card) {
                         card[fn]();
@@ -227,27 +264,9 @@ var cardjs = {
                     }
                 }
 
-                card.cjsv = {
-                    timer: [],
-                    evs: [],
-                    container_id: container_id,
-                    loading_tip_timer: null,
-                    event_flag: false
-                };
-
-                card.settings = {
-                    loading_tip_delay: 0,
-                    server_page: 'serv.php',
-                    id_num: 0,
-                    id_header: 'id',
-                    add_event: false,
-                    fetch: false,
-                    verbose: false
-                };
-
+                // 关键方法，生成、绑定、解绑事件，生成、显示界面，数据处理。
                 card.show = function () {
                     if (card.cjsv.event_flag) {
-                        //console.log('show');
                         call_method('remove_event', true);
                         release_event();
                         card.cjsv.event_flag = false;
@@ -256,7 +275,7 @@ var cardjs = {
                     if (card.settings.id_num >= 1) {
                         card.ids = cjs.f.gen_ids(card.settings.id_header, card.settings.id_num);
                     }
-                    card.f.set_html(card.gen_html());
+                    card.self.innerHTML = card.gen_html();
                     if (card.settings.id_num >= 1) {
                         card.objs = cjs.f.gen_objs(card.ids);
                     }
@@ -270,9 +289,17 @@ var cardjs = {
                     }
                     call_method('after_add_event');
                 };
-                
-                get_virtual_method('gen_html');
-                
+
+                // 生成创建界面代码的虚方法。
+                gen_virtual_method('gen_html');
+
+                /* 
+                 * 销毁时进行一些清理工作。
+                 * 如果还有些其他要清理的东西可以写个
+                 * card.clean_up=function(){
+                 *   ... 你想清理的东西 ...
+                 * };
+                 */
                 card.destroy = function () {
                     if (card.cjsv.event_flag) {
                         call_method('remove_event', true);
@@ -285,9 +312,10 @@ var cardjs = {
                     card.cjsv.timer = [];
                     call_method('clean_up');
                 };
-                
+
+                // 从card.settings.server_page读取数据，然后调用got_data();
                 card.refresh = function () {
-                    card.f.show_loading_tip(card.cjsv.container_id);
+                    card.f.show_loading_tip();
                     if (card.settings.fetch) {
                         card.f.fetch(card.settings.fetch[0],
                                 card.settings.fetch[1],
@@ -297,6 +325,11 @@ var cardjs = {
                         card.show();
                     }
                 };
+
+                /* 
+                 * 将card.settings.server_page返回的数据存入card.data 然后调用 card.show()
+                 * 如果需要对数据进行一些处理，可重写些方法。
+                 */
                 card.got_data = function (data) {
                     card.data = data;
                     if (card.cjsv.loading_tip_timer) {
@@ -305,101 +338,28 @@ var cardjs = {
                     }
                     card.show();
                 };
+
                 return (card);
-            }
-        };
-        
-        cjs.PANEL = {
-            cNew: function (container_id, pages, panel_style) {
-                var pn = cjs.CARD.cNew(container_id);
-
-                pn.f.merge({
-                    id_header: 'panel',
-                    add_event: true,
-                    style: panel_style
-                });
-
-                pn.cjsv.cur_page = null;
-
-                pn.pages = pages;
-
-                if (!Array.isArray(pn.pages) || pn.pages.length <= 0) {
-                    throw 'PANEL(container_id, pages) pages should be an array. \n'
-                            + 'eg. ["MainPage",["top_card","middle_card","bottom_card"]]';
-                }
-
-                pn.settings.id_num = pn.pages.length + 1;
-
-                pn.clean_up = function () {
-                    if (pn.cjsv.cur_page) {
-                        //console.log('page_clean_up');
-                        pn.cjsv.cur_page.destroy();
-                    }
-                    pn.cjsv.cur_page = null;
-                };
-
-                pn.show_page = function (n) {
-                    var num = pn.pages.length;
-                    // 改用css控制显示效果
-                    pn.clean_up();
-                    pn.cjsv.cur_page = cjs.PAGE.cNew(
-                            pn.ids[num],
-                            pn.pages[n][1],
-                            pn.settings.style['card']);
-                    pn.cjsv.cur_page.show();
-                };
-
-                pn.gen_ev_handler = function () {
-                    pn.ev_handler = [];
-                    for (var i = 0; i < pn.pages.length; ++i) {
-                        pn.ev_handler[i] = (function () {
-                            var n = i;
-                            return(function () {
-                                pn.show_page(n);
-                            });
-                        }());
-                    }
-                };
-
-                pn.add_event = function () {
-                    for (var i = 0; i < pn.pages.length; ++i) {
-                        pn.f.on('click', i, i);
-                    }
-                };
-
-                pn.gen_html = function () {
-                    var html = '<div style="margin: 8px;">';
-                    var num = pn.pages.length;
-                    if (num > 0) {
-                        html += '<div>';
-                        for (var i = 0; i < num; ++i) {
-                            if (pn.settings.style['tag']) {
-                                html += '<input type="button" class="' + cjs.f.html_escape(pn.settings.style['tag']) + '"'
-                                        + ' id="' + pn.ids[i] + '" value="' + pn.pages[i][0] + '" >';
-                            } else {
-                                html += '<input type="button" id="' + pn.ids[i] + '" value="' + pn.pages[i][0] + '" >';
-                            }
-                        }
-                        html += '</div>';
-                    }
-
-                    html += '<div id="' + pn.ids[num] + '" ';
-                    if (pn.settings.style['page']) {
-                        html += ' class="' + cjs.f.html_escape(pn.settings.style['page']) + '" ';
-                    }
-                    html += ' ></div></div>';
-                    return html;
-                };
-                return pn;
             }
         };
 
         cjs.PAGE = {
-            cNew: function (container_id, cards, cjs_page_style) {
+            /*
+             * PAGE是将多个CARD整合在一起，大概长这样子：
+             * <div class="page_style"> cjs.o.[cards[0]] <div>
+             * <div class="page_style"> cjs.o.[cards[1]] <div>
+             *    ...
+             *    
+             * 参数 cards 是一个 cjs.o 下对象名组成的数组。
+             * 参数 page_style 是一个html元素的class属性字符串。
+             */
+
+            cNew: function (container_id, cards, page_style) {
+
                 var pg = cjs.CARD.cNew(container_id);
 
                 pg.settings.id_header = 'page';
-                pg.settings.style = cjs_page_style;
+                pg.settings.style = page_style;
 
                 pg.cards = [];
 
@@ -449,6 +409,95 @@ var cardjs = {
                 return pg;
             }
         };
+
+        cjs.PANEL = {
+            // PANEL是对多个PAGE的整合，建议联系example.js中的代码一起看。
+            cNew: function (container_id, pages, panel_style) {
+                var pn = cjs.CARD.cNew(container_id);
+
+                pn.f.merge({
+                    id_header: 'panel',
+                    add_event: true,
+                    style: panel_style
+                });
+
+                pn.pages = pages;
+
+                if (!Array.isArray(pn.pages) || pn.pages.length <= 0) {
+                    throw 'PANEL(container_id, pages) pages should be an array. \n'
+                            + 'eg. ["MainPage",["top_card","middle_card","bottom_card"]]';
+                }
+
+                pn.cjsv.cur_page = null;
+                pn.settings.id_num = pn.pages.length + 1;
+
+                pn.clean_up = function () {
+                    if (pn.cjsv.cur_page) {
+                        pn.cjsv.cur_page.destroy();
+                    }
+                    pn.cjsv.cur_page = null;
+                };
+
+                pn.show_page = function (n) {
+                    var num = pn.pages.length;
+                    // 改用css控制显示效果
+                    pn.clean_up();
+                    pn.cjsv.cur_page = cjs.PAGE.cNew(
+                            pn.ids[num],
+                            pn.pages[n][1],
+                            pn.settings.style['card']);
+                    pn.cjsv.cur_page.show();
+                };
+
+                pn.gen_ev_handler = function () {
+                    pn.ev_handler = [];
+                    for (var i = 0; i < pn.pages.length; ++i) {
+                        pn.ev_handler[i] = (function () {
+                            var n = i;
+                            return(function () {
+                                pn.show_page(n);
+                            });
+                        }());
+                    }
+                };
+
+                pn.add_event = function () {
+                    for (var i = 0; i < pn.pages.length; ++i) {
+                        pn.f.on('click', i, i);
+                    }
+                };
+
+                pn.gen_html = function () {
+                    var html = '<div style="margin: 8px;">';
+                    var num = pn.pages.length;
+                    if (num > 0) {
+                        html += '<div>';
+                        for (var i = 0; i < num; ++i) {
+                            if (pn.settings.style['tag']) {
+                                html += '<input type="button" ' +
+                                        'class="' + cjs.f.html_escape(pn.settings.style['tag']) + '" ' +
+                                        'id="' + pn.ids[i] + '" ' +
+                                        'value="' + pn.pages[i][0] + '" >';
+                            } else {
+                                html += '<input type="button" ' +
+                                        'id="' + pn.ids[i] + '" ' +
+                                        'value="' + pn.pages[i][0] + '" >';
+                            }
+                        }
+                        html += '</div>';
+                    }
+
+                    html += '<div id="' + pn.ids[num] + '" ';
+                    if (pn.settings.style['page']) {
+                        html += ' class="' + cjs.f.html_escape(pn.settings.style['page']) + '" ';
+                    }
+                    html += ' ></div></div>';
+                    return html;
+                };
+                return pn;
+            }
+        };
+
         return cjs;
     }
 };
