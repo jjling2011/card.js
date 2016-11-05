@@ -62,7 +62,8 @@ var cardjs = {
                 } else {
                     myd = new Date();
                 }
-                return ([myd.getFullYear(),
+                return ([
+                    myd.getFullYear(),
                     ('0' + (myd.getMonth() + 1)).slice(-2),
                     ('0' + myd.getDate()).slice(-2)
                 ].join('-'));
@@ -185,11 +186,11 @@ var cardjs = {
                         };
                         xhr.send(encodeURI('op=' + op + '&data=' + param));
                     },
-                    show_msg: function (msg) {
-                        document.getElementById(card.cjsv.container_id).innerHTML = msg;
+                    set_html: function (html) {
+                        document.getElementById(card.cjsv.container_id).innerHTML = html;
                     }
                 };
-                function add_rewrite_function(func_name) {
+                function get_virtual_method(func_name) {
                     var fn = [].concat(func_name);
                     fn.forEach(function (e) {
                         card[e] = function () {
@@ -201,7 +202,7 @@ var cardjs = {
                     });
                 }
 
-                function remove_evs_on() {
+                function release_event() {
                     if (card.cjsv.evs.length > 0) {
                         //console.log(card.cjsv.evs);
                         for (var key in card.cjsv.evs) {
@@ -216,13 +217,12 @@ var cardjs = {
                     }
                 }
 
-                function Call(fn, warn) {
-                    //console.log('Call:'+fn+'@'+warn);
+                function call_method(fn, warn) {
                     if (fn in card) {
                         card[fn]();
                     } else {
                         if (warn && card.settings.verbose) {
-                            console.log('Call undefine function: Card.' + fn + '()');
+                            console.log('Call undefine method: Card.' + fn + '()');
                         }
                     }
                 }
@@ -248,43 +248,44 @@ var cardjs = {
                 card.show = function () {
                     if (card.cjsv.event_flag) {
                         //console.log('show');
-                        Call('remove_event', true);
-                        remove_evs_on();
+                        call_method('remove_event', true);
+                        release_event();
                         card.cjsv.event_flag = false;
                     }
-                    Call('data_parser');
+                    call_method('data_parser');
                     if (card.settings.id_num >= 1) {
                         card.ids = cjs.f.gen_ids(card.settings.id_header, card.settings.id_num);
                     }
-                    document.getElementById(card.cjsv.container_id).innerHTML = card.gen_html();
+                    card.f.set_html(card.gen_html());
                     if (card.settings.id_num >= 1) {
                         card.objs = cjs.f.gen_objs(card.ids);
                     }
-                    Call('before_add_event');
+                    call_method('before_add_event');
                     if (card.settings.id_num >= 1 && card.settings.add_event) {
-                        Call('gen_ev_handler', true);
+                        call_method('gen_ev_handler', true);
                         if (!card.cjsv.event_flag) {
-                            Call('add_event', true);
+                            call_method('add_event', true);
                             card.cjsv.event_flag = true;
                         }
                     }
-                    Call('after_add_event');
+                    call_method('after_add_event');
                 };
-                add_rewrite_function('gen_html');
+                
+                get_virtual_method('gen_html');
+                
                 card.destroy = function () {
-                    //console.log('destroy');
                     if (card.cjsv.event_flag) {
-                        Call('remove_event', true);
-                        remove_evs_on();
+                        call_method('remove_event', true);
+                        release_event();
                         card.cjsv.event_flag = false;
                     }
-                    //console.log(card.cjsv.evs);
                     card.cjsv.timer.forEach(function (e) {
                         clearInterval(e);
                     });
                     card.cjsv.timer = [];
-                    Call('clean_up');
+                    call_method('clean_up');
                 };
+                
                 card.refresh = function () {
                     card.f.show_loading_tip(card.cjsv.container_id);
                     if (card.settings.fetch) {
@@ -307,14 +308,15 @@ var cardjs = {
                 return (card);
             }
         };
+        
         cjs.PANEL = {
-            cNew: function (container_id, pages, cjs_panel_style) {
+            cNew: function (container_id, pages, panel_style) {
                 var pn = cjs.CARD.cNew(container_id);
 
                 pn.f.merge({
                     id_header: 'panel',
                     add_event: true,
-                    style: cjs_panel_style
+                    style: panel_style
                 });
 
                 pn.cjsv.cur_page = null;
