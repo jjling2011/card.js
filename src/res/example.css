@@ -6,16 +6,25 @@
 .cjs-card-div{
     margin:8px;
 }
-
+.cjs-timer-text{
+    margin-top: 8px;
+}
 .cjs-btn{
     margin-right: 8px;
+    border: black solid 1px;
+    border-radius: 3px;
+    padding: 3px 10px 3px 10px;
 }
 
 .cjs-panel-button{
     margin-right: 8px;
 }
-.cjs-pn-tag:focus{
-    background-color: skyblue;
+
+.cjs-pn-tag-active{
+    border: 1px solid #ccc;
+    padding: 4px 10px 4px 10px;
+    border-radius: 8px 8px 0px 0px;
+    background-color: #ccc;
     outline: none;
 }
 

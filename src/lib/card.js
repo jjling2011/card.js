@@ -14,6 +14,9 @@ var cardjs = {
 
         //各通用小函数
         cjs.f = {
+            clamp: function (val, min, max) {
+                return Math.min(Math.max(val, min), max);
+            },
             html_escape: function (unsafe) {
                 return unsafe
                         .replace(/&/g, "&amp;")
@@ -429,6 +432,7 @@ var cardjs = {
                 }
 
                 pn.cjsv.cur_page = null;
+                pn.cjsv.cur_pn = -1;
                 pn.settings.id_num = pn.pages.length + 1;
 
                 pn.clean_up = function () {
@@ -440,6 +444,11 @@ var cardjs = {
 
                 pn.show_page = function (n) {
                     var num = pn.pages.length;
+                    n=cjs.f.clamp(n,0,num);
+                    if (pn.cjsv.cur_pn === n) {
+                        return;
+                    }
+                    pn.cjsv.cur_pn = n;
                     // 改用css控制显示效果
                     pn.clean_up();
                     pn.cjsv.cur_page = cjs.PAGE.cNew(
@@ -447,6 +456,14 @@ var cardjs = {
                             pn.pages[n][1],
                             pn.settings.style['card']);
                     pn.cjsv.cur_page.show();
+                    if (pn.settings.style['active']) {
+                        for (var i = 0; i < num; ++i) {
+                            if (pn.settings.style['tag']) {
+                                pn.objs[i].setAttribute('class', pn.settings.style['tag']);
+                            }
+                        }
+                        pn.objs[n].setAttribute('class', pn.settings.style['active']);
+                    }
                 };
 
                 pn.gen_ev_handler = function () {

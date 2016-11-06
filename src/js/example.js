@@ -2,22 +2,22 @@
 
 /* global cardjs */
 
- /*
-  * 生成一个cardjs实例
-  * 其实就是给cardjs改个你喜欢的名字此后都不用打 cardjs.***。
-  * 
-  * 整个cardjs只有一个cNew函数，结构如下：
-  * cNew:function( 容器ID ){
-  *   f: 各个通用小函数，例如：html_escape()将“&<>”这些符号过滤掉。
-  *   o: 存放各个由cardjs派生出来的对象，留给PAGE及PANEL调用。
-  *   CARD: “卡片”对象(后面创建时再详细说明）。
-  *   PAGE: “页”对象(后面创建时再详细说明）。
-  *   PANEL: “面板”对象(后面创建时再详细说明）。
-  * }
-  * 
-  */
-  
-  
+/*
+ * 生成一个cardjs实例
+ * 其实就是给cardjs改个你喜欢的名字此后都不用打 cardjs.***。
+ * 
+ * 整个cardjs只有一个cNew函数，结构如下：
+ * cNew:function( 容器ID ){
+ *   f: 各个通用小函数，例如：html_escape()将“&<>”这些符号过滤掉。
+ *   o: 存放各个由cardjs派生出来的对象，留给PAGE及PANEL调用。
+ *   CARD: “卡片”对象(后面创建时再详细说明）。
+ *   PAGE: “页”对象(后面创建时再详细说明）。
+ *   PANEL: “面板”对象(后面创建时再详细说明）。
+ * }
+ * 
+ */
+
+
 var eg = cardjs.cNew();
 
 /*
@@ -77,7 +77,7 @@ eg.o.timer_card = {
         tcard.update = function () {
             tcard.objs[2].innerHTML = (new Date()).toLocaleString();
             // for debug
-            console.log(tcard.ids[2]+": "+tcard.objs[2].innerHTML);
+            console.log(tcard.ids[2] + ": " + tcard.objs[2].innerHTML);
         };
 
         // 生成处理事件的函数组（名字必须用 ev_handler）
@@ -89,7 +89,7 @@ eg.o.timer_card = {
                      * 在重绘、销毁时会自动删除。
                      * 可以通过些函数的第三个参数来设置多个时钟。
                      * 详见 card.js 的 cjs.CARD.f.set_timer 函数。
-                     */ 
+                     */
                     tcard.f.set_timer(tcard.update, 1000);
                 },
                 function () {
@@ -108,7 +108,7 @@ eg.o.timer_card = {
          *      ... 解绑代码 ...
          *  };
          */
-        
+
         tcard.add_event = function () {
             tcard.f.on('click', 0, 0);
             tcard.f.on('click', 1, 1);
@@ -129,18 +129,21 @@ eg.o.my_panel = {
                     ['多卡片混合', ['simple_card', 'timer_card', 'simple_card']]
                 ],
                 // panel 调用 example.css 中的样式
-                {
-                    // 顶上的标签按钮
-                    'tag': 'cjs-pn-tag',
-                    // 各个“页”的外框
-                    'page': 'cjs-pn-div',
-                    // 各个“卡片”的外框
-                    'card': 'cjs-card-div'
-                });
-        mp.show();
-        mp.show_page(1);
-        return mp;
-    }
+                        {
+                            // 顶上的标签按钮
+                            'tag': 'cjs-pn-tag',
+                            // 各个“页”的外框
+                            'page': 'cjs-pn-div',
+                            // 各个“卡片”的外框
+                            'card': 'cjs-card-div',
+                            // 选中时
+                            'active': 'cjs-pn-tag-active'
+                        }
+                );
+                mp.show();
+                mp.show_page(1);
+                return mp;
+            }
 };
 
 /*
@@ -156,7 +159,7 @@ eg.o.my_panel = {
  * 上面那个函数只是简单的将数据存入 cjs.CARD.data 然后调用 cjs.CARD.show();
  * 当然你可以重写此函数，对数据进行一些分配和处理。
  * 
- */ 
+ */
 eg.o.fetch_data = {
     cNew: function (container_id) {
         var fd = eg.CARD.cNew(container_id);
@@ -167,9 +170,9 @@ eg.o.fetch_data = {
         });
 
         fd.gen_html = function () {
-            return '<div class="cjs-card-div">' +
-                    '<input type="button" id="' + fd.ids[0] + '" value="读取数据">' +
-                    '<div id="' + fd.ids[1] + '"></div>' +
+            return '<div class="cjs-card-div" style="overflow:auto;">' +
+                    '<input type="button" id="' + fd.ids[0] + '" value="读取数据" class="cjs-btn" style="float:left;">' +
+                    '<div style="float:left;" id="' + fd.ids[1] + '"></div>' +
                     '</div>';
         };
 
