@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=380, maximum-scale=1">
         <link rel="stylesheet" href="res/example.css?t=201610291622">
         <script type="text/javascript" src="lib/card.js?t=201610291525"></script>
+        <script type="text/javascript" src="js/saim.js?t=201610291525"></script>
         <script type="text/javascript" src="js/example.js?t=201610291525"></script>
     </head>
     <body>
@@ -17,12 +18,15 @@
             <div id="my_panel" class="cjs-div"></div>
             <br>动态获取数据(eg.o.fetch_data):
             <div id="fetch_data" class="cjs-div"></div>
+            <br>井字过三关(eg.o.cboard):
+            <div id="chess" class="cjs-div"></div>
         </div>
         <script>
             var sc = eg.o.simple_card.cNew('simple_card');
             var tc = eg.o.timer_card.cNew('timer_card');
             var pn = eg.o.my_panel.cNew('my_panel');
             var fd = eg.o.fetch_data.cNew('fetch_data');
+            var cb = eg.o.cboard.cNew('chess');
         </script>
     </body>
 </html>

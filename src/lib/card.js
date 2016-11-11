@@ -1,8 +1,8 @@
 /* 
- * GPL v3 
+ * https://github.com/jjling2011/card.js
+ * LINCENSE: GPL v3 
  * jjling at gmail dot com 
- * 2016-10-30
- * 
+ * 2016-11-09
  */
 
 var cardjs = {
@@ -459,10 +459,10 @@ var cardjs = {
                     if (pn.settings.style['active']) {
                         for (var i = 0; i < num; ++i) {
                             if (pn.settings.style['tag']) {
-                                pn.objs[i].setAttribute('class', pn.settings.style['tag']);
+                                pn.objs[i].setAttribute('class', cjs.f.html_escape(pn.settings.style['tag']));
                             }
                         }
-                        pn.objs[n].setAttribute('class', pn.settings.style['active']);
+                        pn.objs[n].setAttribute('class', cjs.f.html_escape(pn.settings.style['active']));
                     }
                 };
 

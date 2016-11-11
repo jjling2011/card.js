@@ -1,6 +1,6 @@
 // GPL v3
 
-/* global cardjs */
+/* global cardjs, saim */
 
 /*
  * 生成一个cardjs实例
@@ -199,5 +199,246 @@ eg.o.fetch_data = {
 
         fd.show();
         return fd;
+    }
+};
+
+eg.o.cboard = {
+    // 代码没整理,比较乱.
+    cNew: function (container_id) {
+        var cb = eg.CARD.cNew(container_id);
+
+        cb.f.merge({
+            id_num: 20,
+            id_header: 'chess_boardd',
+            add_event: true
+        });
+
+        cb.record = [0, 0, 0];
+
+        cb.gen_html = function () {
+            var html = '<div class="cjs-cdiv-left"><table>';
+            for (var i = 0; i < 3; ++i) {
+                html += '<tr>';
+                for (var j = 0; j < 3; ++j) {
+                    html += '<td><input type="button" id="' + cb.ids[i * 3 + j] + '" class="cjs-chess"></td>';
+                }
+                html += '</tr>';
+            }
+            html += '</table></div>' +
+                    '<div class="cjs-cdiv-left"><table><tr>' +
+                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[9] + '" value="自动"></td>' +
+                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[10] + '" value="停止"></td>' +
+                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[11] + '" value="清理"></td>' +
+                    '</tr><tr>'+
+                    '<td style="text-align:center;font-size:15px;">Jhon</td>'+
+                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[12] + '" value="导出"></td>'+
+                    '<td id="' + cb.ids[13] + '"></td>'+
+                    '</tr><tr>'+
+                    '<td colspan="3"><input  type="file" id="' + cb.ids[14] + '" style="width:170px;"></td>'+
+                    '</tr><tr>'+
+                    '<td  style="text-align:center;font-size:15px;">Sam</td>'+
+                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[15] + '" value="导出"></td>'+
+                    '<td id="' + cb.ids[16] + '"></td>'+
+                    '</tr><tr>'+
+                    '<td colspan="3"><input type="file" id="' + cb.ids[17] + '" style="width:170px;"></td>'+
+                    '</tr></table></div>';
+            return html;
+        };
+
+        cb.read_board = function () {
+            var data = [];
+            for (var i = 0; i < 9; ++i) {
+                //console.log(cb.ogjs[i].v)
+                switch (cb.objs[i].value) {
+                    case 'X':
+                        data.push(1);
+                        break;
+                    case 'O':
+                        data.push(2);
+                        break;
+                    default:
+                        data.push(0);
+                }
+            }
+            return data;
+        };
+
+        cb.done = function (d) {
+            var c = 0;
+            d.forEach(function (e) {
+                if (e) {
+                    c++;
+                }
+            });
+            return c >= 9;
+        };
+
+        cb.check = function (b) {
+            if (b[4] !== 0) {
+                if (b[0] === b[4] && b[4] === b[8]) {
+                    return(b[4]);
+                }
+                if (b[2] === b[4] && b[4] === b[6]) {
+                    return(b[4]);
+                }
+            }
+
+            var mark;
+            for (var i = 0; i < 3; ++i) {
+                mark = [0, 0];
+                for (var j = 0; j < 3; ++j) {
+                    if (b[i * 3] !== 0 && b[i * 3 + 0] === b[i * 3 + j]) {
+                        if (++mark[0] >= 3) {
+                            return b[i * 3];
+                        }
+                    }
+                    if (b[i] !== 0 && b[i] === b[i + j * 3]) {
+                        if (++mark[1] >= 3) {
+                            return b[i];
+                        }
+                    }
+                }
+            }
+            return 0;
+        };
+
+        cb.place_chess = function (pos, type) {
+            if (cb.objs[pos].value === '') {
+                cb.objs[pos].value = type;
+                return true;
+            } else {
+                console.log('Can not set chess ' + type + ' in ' + pos);
+            }
+            return false;
+        };
+
+
+        cb.move = function () {
+            var board = cb.read_board();
+            var jmov = cb.jhon.process(board);
+            if (jmov || jmov === 0) {
+                cb.place_chess(jmov, 'X');
+                board[jmov] = 1;
+                var res = cb.check(board);
+                if (!cb.done(board) && !res) {
+                    var smov = cb.sam.process(board);
+                    if (smov || smov === 0) {
+                        cb.place_chess(smov, 'O');
+                        board[smov] = 2;
+                    }
+                    res = cb.check(board);
+                }
+                if (cb.done(board) || res) {
+                    var msg = ['draw game', 'Jhon win', 'Sam  win'];
+                    console.log('------< ' + msg[res] + ' >------');
+                    ++cb.record[res];
+                    console.log(cb.record);
+                    console.log('Jhon: ' + cb.jhon.child_id);
+                    console.log('Sam : ' + cb.sam.child_id);
+                    cb.jhon.feedback(res);
+                    var rsam = [0, 2, 1];
+                    cb.sam.feedback(rsam[res]);
+                    cb.ev_handler[11]();
+                }
+            }
+        };
+
+        cb.gen_ev_handler = function () {
+            cb.ev_handler = [];
+            for (var i = 0; i < 9; ++i) {
+                cb.ev_handler[i] = function () {
+                    var id = i;
+                    return function () {
+                        if (!cb.place_chess(id, 'X')) {
+                            return;
+                        }
+                        var board = cb.read_board();
+                        var r = cb.check(board);
+                        if (!cb.done(board) && !r) {
+                            var jmov = cb.jhon.process(board);
+                            cb.place_chess(jmov, 'O');
+                            board[jmov] = 2;
+                            r = cb.check(board);
+                        }
+                        if (cb.done(board) || r) {
+                            var msg = ['draw game', 'you win', 'you lost'];
+                            console.log('------< ' + msg[r] + ' >------');
+                            ++cb.record[r];
+                            console.log(cb.record);
+                            console.log('Jhon: ' + cb.jhon.child_id);
+                            cb.jhon.feedback(r);
+                            cb.ev_handler[11]();
+                        }
+                    };
+                }();
+            }
+            cb.ev_handler[11] = function () {
+                for (var i = 0; i < 9; ++i) {
+                    cb.objs[i].value = null;
+                }
+            };
+            cb.ev_handler[9] = function () {
+                cb.f.set_timer(cb.move, 300);
+            };
+            cb.ev_handler[10] = function () {
+                cb.f.clear_timer();
+            };
+            cb.ev_handler[12] = function () {
+                var url = cb.jhon.snap_shot();
+                cb.objs[13].innerHTML = '<a href="' + url + '" download="Jhon.json">下载</a>';
+            };
+            cb.ev_handler[15] = function () {
+                var url = cb.sam.snap_shot();
+                cb.objs[16].innerHTML = '<a href="' + url + '" download="Sam.json">下载</a>';
+            };
+            cb.ev_handler[14] = function () {
+                var file = cb.objs[14].files[0];
+                if (file && file.size) {
+                    var reader = new FileReader();
+                    reader.onload = function (f) {
+                        var obj = JSON.parse(f.target.result);
+                        // console.log(obj);
+                        cb.jhon = saim.BRAIN.born(obj);
+                        console.log('Jhon: hello every body!');
+                    };
+                    reader.readAsText(file);
+                } else {
+                    console.log("file error!");
+                }
+            };
+            cb.ev_handler[17] = function () {
+                var file = cb.objs[17].files[0];
+                if (file && file.size) {
+                    var reader = new FileReader();
+                    reader.onload = function (f) {
+                        var obj = JSON.parse(f.target.result);
+                        // console.log(obj);
+                        cb.sam = saim.BRAIN.born(obj);
+                        console.log('Sam: hello every body!');
+                    };
+                    reader.readAsText(file);
+                } else {
+                    console.log("file error!");
+                }
+            };
+        };
+
+        cb.add_event = function () {
+            for (var i = 0; i < 9; ++i) {
+                cb.f.on('click', i, i);
+            }
+            [9, 10, 11, 12, 15].forEach(function (e) {
+                cb.f.on('click', e, e);
+            });
+            [14, 17].forEach(function (e) {
+                cb.f.on('change', e, e);
+            });
+        };
+
+        cb.jhon = saim.BRAIN.born();
+        cb.sam = saim.BRAIN.born();
+
+        cb.show();
+        return cb;
     }
 };

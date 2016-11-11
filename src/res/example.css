@@ -1,6 +1,22 @@
 .cjs-div{
     width: 100%;
     border: 2px dashed #ccc;
+    overflow: auto;
+}
+
+.cjs-chess{
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    font-size: 16px;
+    border: 1px solid #ccc;
+}
+
+.cjs-cdiv-left{
+    margin-left:8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    float:left;
 }
 
 .cjs-card-div{
