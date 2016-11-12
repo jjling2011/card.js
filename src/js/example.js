@@ -1,6 +1,6 @@
 // GPL v3
 
-/* global cardjs, saim */
+/* global cardjs, sain */
 
 /*
  * 生成一个cardjs实例
@@ -208,7 +208,7 @@ eg.o.cboard = {
         var cb = eg.CARD.cNew(container_id);
 
         cb.f.merge({
-            id_num: 20,
+            id_num: 19,
             id_header: 'chess_boardd',
             add_event: true
         });
@@ -216,7 +216,8 @@ eg.o.cboard = {
         cb.record = [0, 0, 0];
 
         cb.gen_html = function () {
-            var html = '<div class="cjs-cdiv-left"><table>';
+            var html = '<div class="cjs-card-div" >' +
+                    '<table><tr><td><table>';
             for (var i = 0; i < 3; ++i) {
                 html += '<tr>';
                 for (var j = 0; j < 3; ++j) {
@@ -224,24 +225,30 @@ eg.o.cboard = {
                 }
                 html += '</tr>';
             }
-            html += '</table></div>' +
-                    '<div class="cjs-cdiv-left"><table><tr>' +
-                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[9] + '" value="自动"></td>' +
-                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[10] + '" value="停止"></td>' +
-                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[11] + '" value="清理"></td>' +
-                    '</tr><tr>'+
-                    '<td style="text-align:center;font-size:15px;">Jhon</td>'+
-                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[12] + '" value="导出"></td>'+
-                    '<td id="' + cb.ids[13] + '"></td>'+
-                    '</tr><tr>'+
-                    '<td colspan="3"><input  type="file" id="' + cb.ids[14] + '" style="width:170px;"></td>'+
-                    '</tr><tr>'+
-                    '<td  style="text-align:center;font-size:15px;">Sam</td>'+
-                    '<td><input class="cjs-btn" type="button" id="' + cb.ids[15] + '" value="导出"></td>'+
-                    '<td id="' + cb.ids[16] + '"></td>'+
-                    '</tr><tr>'+
-                    '<td colspan="3"><input type="file" id="' + cb.ids[17] + '" style="width:170px;"></td>'+
-                    '</tr></table></div>';
+            html += '  </table></td>' +
+                    '<td style="vertical-align:top;padding-left:8px;">' +
+                    '  <table><tr>' +
+                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[9] + '" value="自动"></td>' +
+                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[10] + '" value="停止"></td>' +
+                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[11] + '" value="清理"></td>' +
+                    '  </tr><tr>' +
+                    '    <td colspan="3" id="' + cb.ids[18] + '"></td>' +
+                    '  </tr></table>' +
+                    '</td></tr>' +
+                    '<tr><td colspan="2">' +
+                    '  <table><tr>' +
+                    '    <td style="text-align:center;font-size:15px;width:40px;">Jhon</td>' +
+                    '    <td><input  type="file" id="' + cb.ids[14] + '" style="width:170px;"></td>' +
+                    '    <td><input type="button" id="' + cb.ids[12] + '" value="导出"></td>' +
+                    '    <td id="' + cb.ids[13] + '"></td>' +
+                    '  </tr><tr>' +
+                    '    <td  style="text-align:center;font-size:15px;width:40px;">Sam</td>' +
+                    '    <td ><input type="file" id="' + cb.ids[17] + '" style="width:170px;"></td>' +
+                    '    <td><input type="button" id="' + cb.ids[15] + '" value="导出"></td>' +
+                    '    <td id="' + cb.ids[16] + '"></td>' +
+                    '  </tr></table>' +
+                    '</td></tr></table>' +
+                    '</div>';
             return html;
         };
 
@@ -303,6 +310,8 @@ eg.o.cboard = {
         };
 
         cb.place_chess = function (pos, type) {
+            if (pos === null)
+                return false;
             if (cb.objs[pos].value === '') {
                 cb.objs[pos].value = type;
                 return true;
@@ -329,17 +338,58 @@ eg.o.cboard = {
                     res = cb.check(board);
                 }
                 if (cb.done(board) || res) {
-                    var msg = ['draw game', 'Jhon win', 'Sam  win'];
-                    console.log('------< ' + msg[res] + ' >------');
-                    ++cb.record[res];
-                    console.log(cb.record);
-                    console.log('Jhon: ' + cb.jhon.child_id);
-                    console.log('Sam : ' + cb.sam.child_id);
+                    cb.summary(res, ['draw game', 'Jhon&nbsp;win', 'Sam &nbsp;win']);
                     cb.jhon.feedback(res);
                     var rsam = [0, 2, 1];
                     cb.sam.feedback(rsam[res]);
                     cb.ev_handler[11]();
                 }
+            }
+        };
+
+        cb.single_move = function () {
+            var board = cb.read_board();
+            var r = cb.check(board);
+            if (!cb.done(board) && !r) {
+                var jmov = cb.jhon.process(board);
+                cb.place_chess(jmov, 'O');
+                board[jmov] = 2;
+                r = cb.check(board);
+            }
+            if (cb.done(board) || r) {
+                cb.summary(r, ['draw game', 'you win', 'you lost']);
+                cb.jhon.feedback(r);
+                cb.ev_handler[11]();
+            }
+        };
+
+        cb.summary = function (r, msg) {
+            ++cb.record[r];
+            var html = '---&lt; ' + msg[r] + ' &gt;--- </br>' +
+                    '[' + cb.record[0] + ',' + cb.record[1] + ',' + cb.record[2] + ']</br>' +
+                    'Jhon:' + cb.jhon.v.last_id + '</br>' +
+                    'Sam :' + cb.sam.v.last_id + '</br>';
+            cb.objs[18].innerHTML = html;
+        };
+
+        cb.process = function () {
+            var board = cb.read_board();
+            var r = cb.check(board);
+            if (!cb.done(board) && !r) {
+                var jmov = cb.jhon.process(board);
+                if (cb.place_chess(jmov, 'O')) {
+                    board[jmov] = 2;
+                    r = cb.check(board);
+                }
+            }
+            if (cb.done(board) || r) {
+                var msg = ['draw game', 'you win', 'you lost'];
+                console.log('------< ' + msg[r] + ' >------');
+                ++cb.record[r];
+                console.log(cb.record);
+                console.log('Jhon: ' + cb.jhon.child_id);
+                cb.jhon.feedback(r);
+                cb.ev_handler[11]();
             }
         };
 
@@ -352,23 +402,7 @@ eg.o.cboard = {
                         if (!cb.place_chess(id, 'X')) {
                             return;
                         }
-                        var board = cb.read_board();
-                        var r = cb.check(board);
-                        if (!cb.done(board) && !r) {
-                            var jmov = cb.jhon.process(board);
-                            cb.place_chess(jmov, 'O');
-                            board[jmov] = 2;
-                            r = cb.check(board);
-                        }
-                        if (cb.done(board) || r) {
-                            var msg = ['draw game', 'you win', 'you lost'];
-                            console.log('------< ' + msg[r] + ' >------');
-                            ++cb.record[r];
-                            console.log(cb.record);
-                            console.log('Jhon: ' + cb.jhon.child_id);
-                            cb.jhon.feedback(r);
-                            cb.ev_handler[11]();
-                        }
+                        cb.single_move();
                     };
                 }();
             }
@@ -378,18 +412,18 @@ eg.o.cboard = {
                 }
             };
             cb.ev_handler[9] = function () {
-                cb.f.set_timer(cb.move, 300);
+                cb.f.set_timer(cb.move, 100);
             };
             cb.ev_handler[10] = function () {
                 cb.f.clear_timer();
             };
             cb.ev_handler[12] = function () {
-                var url = cb.jhon.snap_shot();
-                cb.objs[13].innerHTML = '<a href="' + url + '" download="Jhon.json">下载</a>';
+                var url = cb.jhon.save();
+                cb.objs[13].innerHTML = '<a href="' + url + '" download="Jhon.json">Jhon</a>';
             };
             cb.ev_handler[15] = function () {
-                var url = cb.sam.snap_shot();
-                cb.objs[16].innerHTML = '<a href="' + url + '" download="Sam.json">下载</a>';
+                var url = cb.sam.save();
+                cb.objs[16].innerHTML = '<a href="' + url + '" download="Sam.json">Sam</a>';
             };
             cb.ev_handler[14] = function () {
                 var file = cb.objs[14].files[0];
@@ -398,7 +432,8 @@ eg.o.cboard = {
                     reader.onload = function (f) {
                         var obj = JSON.parse(f.target.result);
                         // console.log(obj);
-                        cb.jhon = saim.BRAIN.born(obj);
+                        cb.jhon = sain.NETWORK.cNew();
+                        cb.jhon.load(obj);
                         console.log('Jhon: hello every body!');
                     };
                     reader.readAsText(file);
@@ -413,7 +448,8 @@ eg.o.cboard = {
                     reader.onload = function (f) {
                         var obj = JSON.parse(f.target.result);
                         // console.log(obj);
-                        cb.sam = saim.BRAIN.born(obj);
+                        cb.sam = sain.NETWORK.cNew();
+                        cb.sam.load(obj);
                         console.log('Sam: hello every body!');
                     };
                     reader.readAsText(file);
@@ -435,8 +471,8 @@ eg.o.cboard = {
             });
         };
 
-        cb.jhon = saim.BRAIN.born();
-        cb.sam = saim.BRAIN.born();
+        cb.jhon = sain.NETWORK.cNew();
+        cb.sam = sain.NETWORK.cNew();
 
         cb.show();
         return cb;
