@@ -159,11 +159,17 @@ var cardjs = {
                 card.f = {
                     on: function (event, obj_index, handler_index) {
                         // 绑定事件
+                        if (!handler_index && handler_index !== 0) {
+                            handler_index = obj_index;
+                        }
                         card.objs[obj_index].addEventListener(event, card.ev_handler[handler_index], false);
                         card.cjsv.evs[obj_index] = [event, handler_index];
                     },
                     off: function (event, obj_index, handler_index) {
                         // 解绑事件
+                        if (!handler_index && handler_index !== 0) {
+                            handler_index = obj_index;
+                        }
                         card.objs[obj_index].removeEventListener(event, card.ev_handler[handler_index], false);
                         if (card.cjsv.evs[obj_index]) {
                             delete card.cjsv.evs[obj_index];
@@ -444,7 +450,7 @@ var cardjs = {
 
                 pn.show_page = function (n) {
                     var num = pn.pages.length;
-                    n=cjs.f.clamp(n,0,num);
+                    n = cjs.f.clamp(n, 0, num);
                     if (pn.cjsv.cur_pn === n) {
                         return;
                     }
@@ -480,7 +486,7 @@ var cardjs = {
 
                 pn.add_event = function () {
                     for (var i = 0; i < pn.pages.length; ++i) {
-                        pn.f.on('click', i, i);
+                        pn.f.on('click', i);
                     }
                 };
 

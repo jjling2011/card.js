@@ -398,33 +398,37 @@ sain.NETWORK = {
             }
         };
 
-        nw.feedback = function (r) {
+        nw.feedback = function (r, strategy) {
 
-            for (var c in nw.v.partial_on_list) {
-                nw.v.units[c].reset();
-            }
+            var flag, v;
+            var dv, e, i;
 
-            var flag = [0, 1, -1, -1][r];
-
-            var v = (r === 3) ? 0.005 : 0.01;
-            var dv = v * (1 / 10);
-
-            //console.log('flag:',flag*v);
-
-            for (var i = 0; i < nw.v.cache.length; ++i) {
-                var e = nw.v.cache[i];
-                //var val = nw.v.units[e[0]].table[e[1]];
-                //nw.v.units[e[0]].table[e[1]] = sain.f.clamp(val + (flag * v), 0.1, 0.9);
-                nw.v.units[e[0]].table[e[1]] += (flag * v);
-                //console.log(nw.v.units[e[0]].table);
-                v -= dv;
-                if (v <= 0) {
-                    break;
+            if (strategy === 'gentle') {
+                //console.log('sam');
+                flag = [0, 1, -1, 1][r];
+                v = (r === 3) ? 0.007 : 0.01;
+                dv = v * (1 / 6);
+                for (i = nw.v.cache.length - 1; i >= 0; --i) {
+                    e = nw.v.cache[i];
+                    nw.v.units[e[0]].table[e[1]] += (flag * v);
+                    v = (v > dv) ? (v - dv) : 0;
                 }
-                //console.log('cell ' + e[0] + ' moves:');
-                //console.log(nw.units[e[0]].moves);
+            } else {
+                //console.log('jhon');
+                flag = [0, 1, -1, -1][r];
+                v = (r === 3) ? 0.003 : 0.01;
+                dv = v * (1 / 6);
+                for (i = nw.v.cache.length - 1; i >= 0; --i) {
+                    e = nw.v.cache[i];
+                    nw.v.units[e[0]].table[e[1]] += (flag * v);
+                    v = (v > dv) ? (v - dv) : 0;
+                }
             }
-            nw.v.cache = [];
+
+
+
+
+            nw.reset();
         };
 
         nw.connect = function (source, target, val) {
@@ -508,8 +512,7 @@ sain.NETWORK = {
                     nw.v.last_id = data.id;
                 }
             });
-
-            console.log(nw.name + ': ' + nw.v.last_id + ' units loaded!')
+            console.log(nw.name + ': ' + nw.v.last_id + ' units loaded!');
         };
 
         nw.save = function () {

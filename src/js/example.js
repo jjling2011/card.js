@@ -110,8 +110,8 @@ eg.o.timer_card = {
          */
 
         tcard.add_event = function () {
-            tcard.f.on('click', 0, 0);
-            tcard.f.on('click', 1, 1);
+            tcard.f.on('click', 0);
+            tcard.f.on('click', 1);
         };
 
         tcard.show();
@@ -172,7 +172,7 @@ eg.o.fetch_data = {
         fd.gen_html = function () {
             return '<div class="cjs-card-div" style="overflow:auto;">' +
                     '<input type="button" id="' + fd.ids[0] + '" value="读取数据" class="cjs-btn" style="float:left;">' +
-                    '<div style="float:left;" id="' + fd.ids[1] + '"></div>' +
+                    '<div style="float:left;" id="' + fd.ids[1] + '">*需php支持*</div>' +
                     '</div>';
         };
 
@@ -194,7 +194,7 @@ eg.o.fetch_data = {
         };
 
         fd.add_event = function () {
-            fd.f.on('click', 0, 0);
+            fd.f.on('click', 0);
         };
 
         fd.show();
@@ -344,7 +344,7 @@ eg.o.cboard = {
                 } while (!r);
                 ++cb.record[r];
                 cb.jhon.feedback(r);
-                cb.sam.feedback(rsam[r]);
+                cb.sam.feedback(rsam[r],'gentle');
             } while (++c < 300);
             cb.show_board();
             cb.summary(r, ['', 'Jhon&nbsp;win!', 'Sam &nbsp;win!', 'Draw game.']);
@@ -394,7 +394,11 @@ eg.o.cboard = {
                         if (r) {
                             cb.summary(r, ['', '<font color="red">胜</font>', '负', '平手']);
                             var revfb = [0, 2, 1, 3];
-                            cb.com.feedback(revfb[r]);
+                            if (cb.com.name === 'sam') {
+                                cb.com.feedback(revfb[r],'gentle');
+                            }else{
+                                cb.com.feedback(revfb[r]);
+                            }
                             cb.ev_handler[11]();
                             if (cb.com.name === 'jhon') {
                                 cb.first_move();
@@ -475,23 +479,26 @@ eg.o.cboard = {
 
         cb.add_event = function () {
             for (var i = 0; i < 9; ++i) {
-                cb.f.on('click', i, i);
+                cb.f.on('click', i);
             }
             [9, 10, 11, 12, 15, 19, 20].forEach(function (e) {
-                cb.f.on('click', e, e);
+                cb.f.on('click', e);
             });
             [14, 17].forEach(function (e) {
-                cb.f.on('change', e, e);
+                cb.f.on('change', e);
             });
         };
 
+
+        cb.show();
+
+        cb.init_board();
         cb.jhon = sain.NETWORK.cNew('jhon');
         cb.sam = sain.NETWORK.cNew('sam');
         cb.com = cb.sam;
-        cb.init_board();
-        cb.show();
         cb.objs[19].setAttribute('class', 'cjs-btn');
         cb.objs[20].setAttribute('class', 'cjs-btn-blue');
+
         return cb;
     }
 };
