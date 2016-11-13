@@ -227,7 +227,7 @@ eg.o.cboard = {
                 html += '</tr>';
             }
             html += '  </table></td>' +
-                    '<td style="vertical-align:top;padding-left:8px;">' +
+                    '<td style="vertical-align:top;padding-left:2px;">' +
                     '  <table><tr>' +
                     '    <td><input class="cjs-btn" type="button" id="' + cb.ids[9] + '" value="训练" title="Jhon和Sam对决。\n3秒调用一次，每次300盘。\n有时电脑太忙会反应慢点。\n按后面的【停止】结束。"></td>' +
                     '    <td><input class="cjs-btn" type="button" id="' + cb.ids[10] + '" value="停止" title="停止训练"></td>' +

@@ -2,8 +2,12 @@ card.js用于简化动态生成网页时的代码编写过程。
 主要部分详见 `src/lib/card.js` 及 `src/serv.php`   
 使用方法详见示例 `example.html` 及 `example.js`  
   
+###实例  
+[card.js演示页面][1]  
+*建议使用chrome浏览器获得最佳体验*  
+  
 ###效果图    
-![example.html效果图][1]  
+![example.html效果图][2]  
   
 ###详情  
   
@@ -83,4 +87,7 @@ eg.o.my_panel = {
 ###协议  
 GPLv3  
   
-  [1]: https://raw.githubusercontent.com/jjling2011/card.js/master/readme/example_html.png
+
+
+  [1]: https://jjling2011.github.io/card.js/src/example.html
+  [2]: https://raw.githubusercontent.com/jjling2011/card.js/master/readme/example_html.png

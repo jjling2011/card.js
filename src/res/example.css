@@ -1,7 +1,7 @@
 .cjs-div{
     width: 100%;
     border: 2px dashed #ccc;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .cjs-chess{
