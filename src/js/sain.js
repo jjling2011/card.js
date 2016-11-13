@@ -234,21 +234,21 @@ sain.RT = {
         };
 
         rt.gen_signal = function () {
-            var max = -1, val = 0, signal = null;
+            var max = null, val = 0, signal = null;
             var board = network.board.slice();
             for (var key in rt.table) {
                 val = rt.table[key];
                 board[key] = 2;
-                if (val > max) {
+                if (max === null || val > max) {
                     max = val;
                     signal = key;
                 }
             }
             // bug.mark 下面条件判断可能有问题 20161112 
-            if (max > 0 && max <= 0.101) {
-                return sain.f.rpick(rt.table);
-            }
-            if (max < 0.5) {
+//            if (max > 0 && max <= 0.101) {
+//                return sain.f.rpick(rt.table);
+//            }
+            if (max === null || max < 0.5) {
                 if (!sain.f.full(board)) {
                     var rsgn;
                     do {
@@ -257,7 +257,7 @@ sain.RT = {
                     rt.new_signal(rsgn);
                     return rsgn;
                 } else {
-                    console.log('no new signal!');
+                    //console.log('no new signal!');
                 }
             }
             return signal;
@@ -279,6 +279,7 @@ sain.RT = {
                 rt.reset();
                 network.sent(id, signal);
             } else {
+                console.log(rt.table);
                 throw 'router ' + id + ' : can not gen signal';
             }
         };
@@ -288,8 +289,11 @@ sain.RT = {
 };
 
 sain.NETWORK = {
-    cNew: function () {
+    cNew: function (name) {
         var nw = {};
+
+        nw.name = name;
+
         nw.v = {
             last_id: 0,
             units: {},
@@ -378,12 +382,13 @@ sain.NETWORK = {
 
             var r = nw.v.collector.fetch();
             if (r !== null) {
-                nw.v.cache.unshift(r);
+                //nw.v.cache.unshift(r);
+                nw.v.cache.push(r);
                 for (var c in nw.v.partial_on_list) {
                     nw.v.units[c].reset();
                 }
-                nw.v.partial_on_list={};
-                nw.v.on_list={};
+                nw.v.partial_on_list = {};
+                nw.v.on_list = {};
                 return(r[1]);
             } else {
                 // console.log('Error: no result!');
@@ -399,16 +404,23 @@ sain.NETWORK = {
                 nw.v.units[c].reset();
             }
 
-            var flag = [-1, -1, 1][r % 3];
-            var v = r ? 0.3 : 0.15;
-            var dv = v * (1 / 5);
+            var flag = [0, 1, -1, -1][r];
+
+            var v = (r === 3) ? 0.005 : 0.01;
+            var dv = v * (1 / 10);
+
+            //console.log('flag:',flag*v);
 
             for (var i = 0; i < nw.v.cache.length; ++i) {
                 var e = nw.v.cache[i];
-                var val = nw.v.units[e[0]].table[e[1]];
-
-                nw.v.units[e[0]].table[e[1]] = sain.f.clamp(val + (flag * v), 0.1, 0.9);
-                v = sain.f.clamp(v - dv, 0, 1);
+                //var val = nw.v.units[e[0]].table[e[1]];
+                //nw.v.units[e[0]].table[e[1]] = sain.f.clamp(val + (flag * v), 0.1, 0.9);
+                nw.v.units[e[0]].table[e[1]] += (flag * v);
+                //console.log(nw.v.units[e[0]].table);
+                v -= dv;
+                if (v <= 0) {
+                    break;
+                }
                 //console.log('cell ' + e[0] + ' moves:');
                 //console.log(nw.units[e[0]].moves);
             }
@@ -421,6 +433,16 @@ sain.NETWORK = {
         };
         nw.disconnect = function (source, target, val) {
             nw.v.units[source].disconnect(target, val);
+        };
+
+        nw.reset = function () {
+            for (var c in nw.v.partial_on_list) {
+                nw.v.units[c].reset();
+            }
+            nw.v.on_list = {};
+            nw.v.partial_on_list = {};
+            nw.v.collector.reset();
+            nw.v.cache = [];
         };
 
         nw.add_router = function () {
@@ -456,6 +478,7 @@ sain.NETWORK = {
 
         nw.load = function (data) {
 
+            nw.reset();
             nw.v.units = {};
             nw.v.srcs = [];
             nw.v.last_id = 0;
@@ -485,6 +508,8 @@ sain.NETWORK = {
                     nw.v.last_id = data.id;
                 }
             });
+
+            console.log(nw.name + ': ' + nw.v.last_id + ' units loaded!')
         };
 
         nw.save = function () {

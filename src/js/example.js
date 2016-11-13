@@ -208,12 +208,13 @@ eg.o.cboard = {
         var cb = eg.CARD.cNew(container_id);
 
         cb.f.merge({
-            id_num: 19,
+            id_num: 21,
             id_header: 'chess_boardd',
             add_event: true
         });
 
-        cb.record = [0, 0, 0];
+        cb.record = [0, 0, 0, 0];
+        cb.lock = false;
 
         cb.gen_html = function () {
             var html = '<div class="cjs-card-div" >' +
@@ -221,66 +222,54 @@ eg.o.cboard = {
             for (var i = 0; i < 3; ++i) {
                 html += '<tr>';
                 for (var j = 0; j < 3; ++j) {
-                    html += '<td><input type="button" id="' + cb.ids[i * 3 + j] + '" class="cjs-chess"></td>';
+                    html += '<td><input type="button" id="' + cb.ids[i * 3 + j] + '" class="cjs-chess" title="点击下棋"></td>';
                 }
                 html += '</tr>';
             }
             html += '  </table></td>' +
                     '<td style="vertical-align:top;padding-left:8px;">' +
                     '  <table><tr>' +
-                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[9] + '" value="自动"></td>' +
-                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[10] + '" value="停止"></td>' +
-                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[11] + '" value="清理"></td>' +
+                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[9] + '" value="训练" title="Jhon和Sam对决。\n3秒调用一次，每次300盘。\n有时电脑太忙会反应慢点。\n按后面的【停止】结束。"></td>' +
+                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[10] + '" value="停止" title="停止训练"></td>' +
+                    '    <td><input class="cjs-btn" type="button" id="' + cb.ids[11] + '" value="清理" title="清理棋盘，恢复初始状态。"></td>' +
                     '  </tr><tr>' +
-                    '    <td colspan="3" id="' + cb.ids[18] + '"></td>' +
+                    '    <td colspan="3" id="' + cb.ids[18] + '" style="font-size:14px;padding-top:5px;">说明：</br>空白处点击开始游戏。</br>按钮上停1秒会有提示。</td>' +
                     '  </tr></table>' +
                     '</td></tr>' +
                     '<tr><td colspan="2">' +
                     '  <table><tr>' +
-                    '    <td style="text-align:center;font-size:15px;width:40px;">Jhon</td>' +
-                    '    <td><input  type="file" id="' + cb.ids[14] + '" style="width:170px;"></td>' +
-                    '    <td><input type="button" id="' + cb.ids[12] + '" value="导出"></td>' +
+                    '    <td style="text-align:center;"><input type="button" id="' + cb.ids[19] + '" value="Jhon" title="选Jhon作为对手（Jhon会先下第一手）。"></td>' +
+                    '    <td><input  type="file" id="' + cb.ids[14] + '" style="width:170px;" title="导入Jhon的训练数据"></td>' +
+                    '    <td><input type="button" id="' + cb.ids[12] + '" value="导出" title="导出Jhon的训练数据" ></td>' +
                     '    <td id="' + cb.ids[13] + '"></td>' +
                     '  </tr><tr>' +
-                    '    <td  style="text-align:center;font-size:15px;width:40px;">Sam</td>' +
-                    '    <td ><input type="file" id="' + cb.ids[17] + '" style="width:170px;"></td>' +
-                    '    <td><input type="button" id="' + cb.ids[15] + '" value="导出"></td>' +
+                    '    <td  style="text-align:center;"><input type="button" id="' + cb.ids[20] + '" value="Sam" title="选Sam作为对手（玩家下第一手）。"></td>' +
+                    '    <td ><input type="file" id="' + cb.ids[17] + '" style="width:170px;" title="导入Sam的训练数据"></td>' +
+                    '    <td><input type="button" id="' + cb.ids[15] + '" value="导出"  title="导出Sam的训练数据" ></td>' +
                     '    <td id="' + cb.ids[16] + '"></td>' +
                     '  </tr></table>' +
+                    '</td></tr><tr><td colspan="2" style="font-size:14px;">' +
+                    '你可以下载这些训练数据和电脑对决：</br>' +
+                    '<a href="res/Jhon.json" download="Jhon.json">Jhon.json（先手）</a></br>' +
+                    '<a href="res/Sam.json" download="Sam.json">Sam.json（后手，比较笨）</a></br>' +
                     '</td></tr></table>' +
                     '</div>';
             return html;
         };
 
-        cb.read_board = function () {
-            var data = [];
-            for (var i = 0; i < 9; ++i) {
-                //console.log(cb.ogjs[i].v)
-                switch (cb.objs[i].value) {
-                    case 'X':
-                        data.push(1);
-                        break;
-                    case 'O':
-                        data.push(2);
-                        break;
-                    default:
-                        data.push(0);
-                }
-            }
-            return data;
-        };
-
-        cb.done = function (d) {
-            var c = 0;
-            d.forEach(function (e) {
-                if (e) {
-                    c++;
-                }
-            });
-            return c >= 9;
-        };
-
         cb.check = function (b) {
+            // 0无 1胜 2胜 3平
+            var c = 0;
+
+            for (var i = 0; i < 9; ++i) {
+                if (!b[i])
+                    c++;
+            }
+
+            if (c > 5) {
+                return 0;
+            }
+
             if (b[4] !== 0) {
                 if (b[0] === b[4] && b[4] === b[8]) {
                     return(b[4]);
@@ -306,91 +295,79 @@ eg.o.cboard = {
                     }
                 }
             }
+
+            if (!c) {
+                return 3;
+            }
+
             return 0;
         };
 
-        cb.place_chess = function (pos, type) {
-            if (pos === null)
+        cb.place_chess = function (pos, val) {
+            if (cb.board[pos]) {
+                console.log('Error: pos has been taken! mark:' + val);
                 return false;
-            if (cb.objs[pos].value === '') {
-                cb.objs[pos].value = type;
-                return true;
             } else {
-                console.log('Can not set chess ' + type + ' in ' + pos);
+                cb.board[pos] = val;
+                return true;
             }
-            return false;
         };
 
+        cb.init_board = function () {
+            cb.board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        };
 
-        cb.move = function () {
-            var board = cb.read_board();
-            var jmov = cb.jhon.process(board);
-            if (jmov || jmov === 0) {
-                cb.place_chess(jmov, 'X');
-                board[jmov] = 1;
-                var res = cb.check(board);
-                if (!cb.done(board) && !res) {
-                    var smov = cb.sam.process(board);
-                    if (smov || smov === 0) {
-                        cb.place_chess(smov, 'O');
-                        board[smov] = 2;
+        cb.show_board = function () {
+            var chess = ['', 'X', 'O'];
+            for (var i = 0; i < 9; ++i) {
+                cb.objs[i].value = chess[cb.board[i]];
+            }
+        };
+
+        cb.auto = function () {
+            if (cb.lock) {
+                return;
+            }
+            cb.lock = true;
+            var c = 0, r = 0, rsam = [0, 2, 1, 3];
+            do {
+                cb.init_board();
+                do {
+                    cb.place_chess(cb.jhon.process(cb.board), 1);
+                    r = cb.check(cb.board);
+                    if (!r) {
+                        cb.place_chess(cb.sam.process(cb.board), 2);
+                        r = cb.check(cb.board);
                     }
-                    res = cb.check(board);
-                }
-                if (cb.done(board) || res) {
-                    cb.summary(res, ['draw game', 'Jhon&nbsp;win', 'Sam &nbsp;win']);
-                    cb.jhon.feedback(res);
-                    var rsam = [0, 2, 1];
-                    cb.sam.feedback(rsam[res]);
-                    cb.ev_handler[11]();
-                }
-            }
-        };
-
-        cb.single_move = function () {
-            var board = cb.read_board();
-            var r = cb.check(board);
-            if (!cb.done(board) && !r) {
-                var jmov = cb.jhon.process(board);
-                cb.place_chess(jmov, 'O');
-                board[jmov] = 2;
-                r = cb.check(board);
-            }
-            if (cb.done(board) || r) {
-                cb.summary(r, ['draw game', 'you win', 'you lost']);
+                    //cb.show_board();
+                    //console.log(r,cb.board);
+                } while (!r);
+                ++cb.record[r];
                 cb.jhon.feedback(r);
-                cb.ev_handler[11]();
-            }
+                cb.sam.feedback(rsam[r]);
+            } while (++c < 300);
+            cb.show_board();
+            cb.summary(r, ['', 'Jhon&nbsp;win!', 'Sam &nbsp;win!', 'Draw game.']);
+            //console.log(cb.record, cb.jhon.v.last_id, cb.sam.v.last_id);
+            cb.lock = false;
         };
 
         cb.summary = function (r, msg) {
             ++cb.record[r];
-            var html = '---&lt; ' + msg[r] + ' &gt;--- </br>' +
-                    '[' + cb.record[0] + ',' + cb.record[1] + ',' + cb.record[2] + ']</br>' +
-                    'Jhon:' + cb.jhon.v.last_id + '</br>' +
-                    'Sam :' + cb.sam.v.last_id + '</br>';
+            var html = '----&lt; ' + msg[r] + ' &gt;----<br>' +
+                    'Jhon: ' + cb.jhon.v.last_id + ' units<br>' +
+                    'Sam : ' + cb.sam.v.last_id + ' units<br><br>' +
+                    'X：' + cb.record[1] + ' O：' + cb.record[2] + ' 平：' + cb.record[3];
             cb.objs[18].innerHTML = html;
         };
 
-        cb.process = function () {
-            var board = cb.read_board();
-            var r = cb.check(board);
-            if (!cb.done(board) && !r) {
-                var jmov = cb.jhon.process(board);
-                if (cb.place_chess(jmov, 'O')) {
-                    board[jmov] = 2;
-                    r = cb.check(board);
-                }
-            }
-            if (cb.done(board) || r) {
-                var msg = ['draw game', 'you win', 'you lost'];
-                console.log('------< ' + msg[r] + ' >------');
-                ++cb.record[r];
-                console.log(cb.record);
-                console.log('Jhon: ' + cb.jhon.child_id);
-                cb.jhon.feedback(r);
-                cb.ev_handler[11]();
-            }
+        cb.revers_board = function (b) {
+            var new_board = [];
+            var chess = [0, 2, 1];
+            b.forEach(function (e) {
+                new_board.push(chess[e]);
+            });
+            return new_board;
         };
 
         cb.gen_ev_handler = function () {
@@ -399,20 +376,42 @@ eg.o.cboard = {
                 cb.ev_handler[i] = function () {
                     var id = i;
                     return function () {
-                        if (!cb.place_chess(id, 'X')) {
+
+                        if (!cb.place_chess(id, 1)) {
                             return;
                         }
-                        cb.single_move();
+                        var r;
+                        var board = cb.board;
+                        if (cb.com.name === 'jhon') {
+                            board = cb.revers_board(cb.board);
+                        }
+                        r = cb.check(cb.board);
+                        if (!r) {
+                            cb.place_chess(cb.com.process(board), 2);
+                            r = cb.check(cb.board);
+                        }
+                        cb.show_board();
+                        if (r) {
+                            cb.summary(r, ['', '<font color="red">胜</font>', '负', '平手']);
+                            var revfb = [0, 2, 1, 3];
+                            cb.com.feedback(revfb[r]);
+                            cb.ev_handler[11]();
+                            if (cb.com.name === 'jhon') {
+                                cb.first_move();
+                            }
+                        }
                     };
                 }();
             }
             cb.ev_handler[11] = function () {
-                for (var i = 0; i < 9; ++i) {
-                    cb.objs[i].value = null;
-                }
+                cb.init_board();
+                cb.jhon.reset();
+                cb.sam.reset();
+                cb.show_board();
             };
             cb.ev_handler[9] = function () {
-                cb.f.set_timer(cb.move, 100);
+                cb.init_board();
+                cb.f.set_timer(cb.auto, 3000);
             };
             cb.ev_handler[10] = function () {
                 cb.f.clear_timer();
@@ -431,10 +430,7 @@ eg.o.cboard = {
                     var reader = new FileReader();
                     reader.onload = function (f) {
                         var obj = JSON.parse(f.target.result);
-                        // console.log(obj);
-                        cb.jhon = sain.NETWORK.cNew();
                         cb.jhon.load(obj);
-                        console.log('Jhon: hello every body!');
                     };
                     reader.readAsText(file);
                 } else {
@@ -447,23 +443,41 @@ eg.o.cboard = {
                     var reader = new FileReader();
                     reader.onload = function (f) {
                         var obj = JSON.parse(f.target.result);
-                        // console.log(obj);
-                        cb.sam = sain.NETWORK.cNew();
                         cb.sam.load(obj);
-                        console.log('Sam: hello every body!');
                     };
                     reader.readAsText(file);
                 } else {
                     console.log("file error!");
                 }
             };
+            cb.ev_handler[19] = function () {
+                cb.ev_handler[11]();
+                cb.com = cb.jhon;
+                cb.first_move();
+                console.log('Jhon: online!');
+                cb.objs[19].setAttribute('class', 'cjs-btn-blue');
+                cb.objs[20].setAttribute('class', 'cjs-btn');
+
+            };
+            cb.ev_handler[20] = function () {
+                cb.ev_handler[11]();
+                cb.com = cb.sam;
+                console.log('Sam: online!');
+                cb.objs[20].setAttribute('class', 'cjs-btn-blue');
+                cb.objs[19].setAttribute('class', 'cjs-btn');
+            };
+        };
+
+        cb.first_move = function () {
+            cb.place_chess(cb.com.process(cb.board), 2);
+            cb.show_board();
         };
 
         cb.add_event = function () {
             for (var i = 0; i < 9; ++i) {
                 cb.f.on('click', i, i);
             }
-            [9, 10, 11, 12, 15].forEach(function (e) {
+            [9, 10, 11, 12, 15, 19, 20].forEach(function (e) {
                 cb.f.on('click', e, e);
             });
             [14, 17].forEach(function (e) {
@@ -471,10 +485,13 @@ eg.o.cboard = {
             });
         };
 
-        cb.jhon = sain.NETWORK.cNew();
-        cb.sam = sain.NETWORK.cNew();
-
+        cb.jhon = sain.NETWORK.cNew('jhon');
+        cb.sam = sain.NETWORK.cNew('sam');
+        cb.com = cb.sam;
+        cb.init_board();
         cb.show();
+        cb.objs[19].setAttribute('class', 'cjs-btn');
+        cb.objs[20].setAttribute('class', 'cjs-btn-blue');
         return cb;
     }
 };

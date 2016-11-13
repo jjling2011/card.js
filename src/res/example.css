@@ -24,6 +24,14 @@
     padding: 3px 10px 3px 10px;
 }
 
+.cjs-btn-blue{
+    margin-right: 8px;
+    border: black solid 1px;
+    border-radius: 3px;
+    padding: 3px 10px 3px 10px;
+    background: skyblue;
+}
+
 .cjs-panel-button{
     margin-right: 8px;
 }
