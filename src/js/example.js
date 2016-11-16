@@ -126,7 +126,7 @@ eg.o.my_panel = {
                 [
                     ['简单卡片', ['simple_card']],
                     ['显示时间', ['timer_card']],
-                    ['多卡片混合', ['simple_card', 'timer_card', 'simple_card']]
+                    ['多卡片混合', ['timer_card','simple_card',  'fetch_data']]
                 ],
                 // panel 调用 example.css 中的样式
                         {
@@ -189,6 +189,7 @@ eg.o.fetch_data = {
                     fd.f.fetch('echo_str', 'helloooo', function (data) {
                         fd.objs[1].innerHTML = eg.f.html_escape(data);
                     });
+                    //fd.destroy();
                 }
             ];
         };

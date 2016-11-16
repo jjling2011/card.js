@@ -223,9 +223,13 @@ var cardjs = {
                                 }
                                 var rsp = JSON.parse(raw_rsp);
                                 if (rsp && rsp.status && rsp.data) {
-                                    func(rsp.data);
+                                    if (card.self) {
+                                        func(rsp.data);
+                                    } else {
+                                        console.log('Fetch error: Object has been destroyed!');
+                                    }
                                 } else {
-                                    console.log('Fetch: fail!');
+                                    console.log('Fetch error: fetch data fail!');
                                     console.log(rsp);
                                 }
                             } else {
@@ -320,6 +324,7 @@ var cardjs = {
                     });
                     card.cjsv.timer = [];
                     call_method('clean_up');
+                    card.self = null;
                 };
 
                 // 从card.settings.server_page读取数据，然后调用got_data();
