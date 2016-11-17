@@ -44,8 +44,6 @@ eg.o.simple_card = {
             return '<div>这是一个简单的卡片示例</div>';
         };
 
-        // 生成实例后立即显示出来。  
-        scard.show();
         return scard;
     }
 };
@@ -62,7 +60,7 @@ eg.o.simple_card = {
     <body>
         <div id="my_card" ></div>
         <script>
-            var sc = eg.o.simple_card.cNew('my_card');
+            var sc = eg.o.simple_card.cNew('my_card').show();
         </script>
     </body>
 </html>
@@ -75,8 +73,6 @@ eg.o.my_panel = {
         var mp = eg.PANEL.cNew(container_id, [
             ['三个卡片', ['simple_card','simple_card','simple_card']],
             ['单个卡片', ['simple_card']]]);
-        mp.show();
-        mp.show_page(1);
         return mp;
     }
 };

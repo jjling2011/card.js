@@ -48,7 +48,7 @@ eg.o.simple_card = {
         };
 
         // 显示。  
-        scard.show();
+        //scard.show();
         return scard;
     }
 };
@@ -114,7 +114,7 @@ eg.o.timer_card = {
             tcard.f.on('click', 1);
         };
 
-        tcard.show();
+        //tcard.show();
         return tcard;
     }
 };
@@ -126,7 +126,7 @@ eg.o.my_panel = {
                 [
                     ['简单卡片', ['simple_card']],
                     ['显示时间', ['timer_card']],
-                    ['多卡片混合', ['timer_card','simple_card',  'fetch_data']]
+                    ['多卡片混合', ['timer_card', 'simple_card', 'fetch_data']]
                 ],
                 // panel 调用 example.css 中的样式
                         {
@@ -140,8 +140,8 @@ eg.o.my_panel = {
                             'active': 'cjs-pn-tag-active'
                         }
                 );
-                mp.show();
-                mp.show_page(1);
+                //mp.show();
+                //mp.show_page(1);
                 return mp;
             }
 };
@@ -198,7 +198,7 @@ eg.o.fetch_data = {
             fd.f.on('click', 0);
         };
 
-        fd.show();
+        //fd.show();
         return fd;
     }
 };
@@ -345,7 +345,7 @@ eg.o.cboard = {
                 } while (!r);
                 ++cb.record[r];
                 cb.jhon.feedback(r);
-                cb.sam.feedback(rsam[r],'gentle');
+                cb.sam.feedback(rsam[r], 'gentle');
             } while (++c < 300);
             cb.show_board();
             cb.summary(r, ['', 'Jhon&nbsp;win!', 'Sam &nbsp;win!', 'Draw game.']);
@@ -396,8 +396,8 @@ eg.o.cboard = {
                             cb.summary(r, ['', '<font color="red">胜</font>', '负', '平手']);
                             var revfb = [0, 2, 1, 3];
                             if (cb.com.name === 'sam') {
-                                cb.com.feedback(revfb[r],'gentle');
-                            }else{
+                                cb.com.feedback(revfb[r], 'gentle');
+                            } else {
                                 cb.com.feedback(revfb[r]);
                             }
                             cb.ev_handler[11]();
@@ -490,15 +490,14 @@ eg.o.cboard = {
             });
         };
 
-
-        cb.show();
-
-        cb.init_board();
-        cb.jhon = sain.NETWORK.cNew('jhon');
-        cb.sam = sain.NETWORK.cNew('sam');
-        cb.com = cb.sam;
-        cb.objs[19].setAttribute('class', 'cjs-btn');
-        cb.objs[20].setAttribute('class', 'cjs-btn-blue');
+        cb.after_add_event = function () {
+            cb.init_board();
+            cb.jhon = sain.NETWORK.cNew('jhon');
+            cb.sam = sain.NETWORK.cNew('sam');
+            cb.com = cb.sam;
+            cb.objs[19].setAttribute('class', 'cjs-btn');
+            cb.objs[20].setAttribute('class', 'cjs-btn-blue');
+        };
 
         return cb;
     }

@@ -450,6 +450,7 @@ sain.NETWORK = {
         };
 
         nw.add_router = function () {
+            //console.log(nw.name,' on:', Object.keys(nw.v.on_list).length, ' partial:', Object.keys(nw.v.partial_on_list).length);
             var rt = sain.RT.cNew(nw, nw.gen_id());
             for (var key in nw.v.on_list) {
                 var val = nw.v.on_list[key];

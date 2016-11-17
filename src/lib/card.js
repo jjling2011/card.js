@@ -117,6 +117,8 @@ var cardjs = {
                     self: document.getElementById(container_id),
                     // 各个设置项
                     settings: {
+                        // 标识实例类型
+                        name: 'CARD',
                         /* 
                          * 读取服务器数据会花点时间，如果n毫秒后还没读取到则提示刷新。 
                          * 默认0代表不显示提示信息。
@@ -301,6 +303,7 @@ var cardjs = {
                         }
                     }
                     call_method('after_add_event');
+                    return card;
                 };
 
                 // 生成创建界面代码的虚方法。
@@ -338,6 +341,7 @@ var cardjs = {
                     } else {
                         card.show();
                     }
+                    return card;
                 };
 
                 /* 
@@ -374,13 +378,20 @@ var cardjs = {
 
                 pg.settings.id_header = 'page';
                 pg.settings.style = page_style;
+                pg.settings.name = 'PAGE';
 
                 pg.cards = [];
+
 
                 pg.data_parser = function () {
                     if (!Array.isArray(cards) || cards.length <= 0) {
                         throw 'Error: PAGE(container_id,cards) cards should be an array!';
                     }
+                    cards.forEach(function (e) {
+                        if (!(e in cjs.o)) {
+                            throw 'Card ' + e + ' undefined!';
+                        }
+                    });
                     pg.data = cards;
                     pg.settings.id_num = pg.data.length;
                 };
@@ -403,7 +414,7 @@ var cardjs = {
                     pg.clean_up();
                     pg.data.forEach(function (e, i) {
                         if (cjs.o[e]) {
-                            pg.cards.push(cjs.o[e].cNew(pg.ids[i]));
+                            pg.cards.push(cjs.o[e].cNew(pg.ids[i]).show());
                         } else {
                             throw 'PAGE: ' + e + ' not define!';
                         }
@@ -430,6 +441,7 @@ var cardjs = {
                 var pn = cjs.CARD.cNew(container_id);
 
                 pn.f.merge({
+                    name: 'PANEL',
                     id_header: 'panel',
                     add_event: true,
                     style: panel_style
@@ -465,8 +477,7 @@ var cardjs = {
                     pn.cjsv.cur_page = cjs.PAGE.cNew(
                             pn.ids[num],
                             pn.pages[n][1],
-                            pn.settings.style['card']);
-                    pn.cjsv.cur_page.show();
+                            pn.settings.style['card']).show();
                     if (pn.settings.style['active']) {
                         for (var i = 0; i < num; ++i) {
                             if (pn.settings.style['tag']) {
@@ -493,6 +504,10 @@ var cardjs = {
                     for (var i = 0; i < pn.pages.length; ++i) {
                         pn.f.on('click', i);
                     }
+                };
+
+                pn.after_add_event = function () {
+                    pn.show_page(0);
                 };
 
                 pn.gen_html = function () {
