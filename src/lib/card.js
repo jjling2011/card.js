@@ -149,7 +149,7 @@ var cardjs = {
                      * fyi. cjsv = cardjs_variables
                      */
                     cjsv: {
-                        timer: [],
+                        timer: {},
                         evs: [],
                         container_id: container_id,
                         loading_tip_timer: null,
@@ -185,10 +185,12 @@ var cardjs = {
                     },
                     clear_timer: function (num) {
                         num = num || 0;
-                        if (card.cjsv.timer[num]) {
-                            clearInterval(card.cjsv.timer[num]);
+                        if (num in card.cjsv.timer) {
+                            if (card.cjsv.timer[num]) {
+                                clearInterval(card.cjsv.timer[num]);
+                            }
+                            delete card.cjsv.timer[num];
                         }
-                        card.cjsv.timer = [];
                     },
                     set_timer: function (call_back, interval, num) {
                         num = num || 0;
@@ -284,7 +286,12 @@ var cardjs = {
                     if (card.cjsv.event_flag) {
                         call_method('remove_event', true);
                         release_event();
+                        for (var key in card.cjsv.timer) {
+                            card.f.clear_timer(key);
+                        }
+                        card.cjsv.timer = {};
                         card.cjsv.event_flag = false;
+
                     }
                     call_method('data_parser');
                     if (card.settings.id_num >= 1) {
@@ -322,10 +329,10 @@ var cardjs = {
                         release_event();
                         card.cjsv.event_flag = false;
                     }
-                    card.cjsv.timer.forEach(function (e) {
-                        clearInterval(e);
-                    });
-                    card.cjsv.timer = [];
+                    for (var key in card.cjsv.timer) {
+                        card.f.clear_timer(key);
+                    }
+                    card.cjsv.timer = {};
                     call_method('clean_up');
                     card.self = null;
                 };
@@ -369,7 +376,7 @@ var cardjs = {
              *    ...
              *    
              * 参数 cards 是一个 cjs.o 下对象名组成的数组。
-             * 参数 page_style 是一个html元素的class属性字符串。
+             * 参数 page_style 是样式字符串。
              */
 
             cNew: function (container_id, cards, page_style) {
@@ -436,7 +443,7 @@ var cardjs = {
         };
 
         cjs.PANEL = {
-            // PANEL是对多个PAGE的整合，建议联系example.js中的代码一起看。
+            // PANEL是对多个PAGE的整合，建议和example.js中的代码一起看。
             cNew: function (container_id, pages, panel_style) {
                 var pn = cjs.CARD.cNew(container_id);
 
