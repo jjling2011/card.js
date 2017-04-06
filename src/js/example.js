@@ -365,9 +365,10 @@ eg.o.cboard = {
         cb.revers_board = function (b) {
             var new_board = [];
             var chess = [0, 2, 1];
-            b.forEach(function (e) {
-                new_board.push(chess[e]);
-            });
+            for(var i=0;i<b.length;i++){
+            
+                new_board.push(chess[b[i]]);
+            }
             return new_board;
         };
 
@@ -479,15 +480,19 @@ eg.o.cboard = {
         };
 
         cb.add_event = function () {
-            for (var i = 0; i < 9; ++i) {
+            var i;
+            for ( i = 0; i < 9; ++i) {
                 cb.f.on('click', i);
             }
-            [9, 10, 11, 12, 15, 19, 20].forEach(function (e) {
-                cb.f.on('click', e);
-            });
-            [14, 17].forEach(function (e) {
-                cb.f.on('change', e);
-            });
+            var d=[9, 10, 11, 12, 15, 19, 20];
+            for(i=0;i<d.length;i++){
+                cb.f.on('click', d[i]);
+            };
+            d=[14,17];
+            for(i=0;i<d.length;i++){
+            
+                cb.f.on('change', d[i]);
+            }
         };
 
         cb.after_add_event = function () {

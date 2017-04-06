@@ -14,6 +14,11 @@ var cardjs = {
 
         //各通用小函数
         cjs.f = {
+            pad: function (n, width, z) {
+                z = z || '0';
+                n = n + '';
+                return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+            },
             clamp: function (val, min, max) {
                 return Math.min(Math.max(val, min), max);
             },
@@ -83,9 +88,9 @@ var cardjs = {
             },
             gen_objs: function (ids) {
                 var rtv = new Array();
-                ids.forEach(function (e) {
-                    rtv.push(document.getElementById(e));
-                });
+                for (var i = 0; i < ids.length; i++) {
+                    rtv.push(document.getElementById(ids[i]));
+                }
                 return (rtv);
             },
             get_page_name: function () {
@@ -108,6 +113,30 @@ var cardjs = {
             str_to_time: function (d) {
                 var mydate = new Date(d);
                 return (('0' + mydate.getHours()).slice(-2) + ':' + ('0' + mydate.getMinutes()).slice(-2));
+            },
+            set_cookie: function (name, value, expires) {
+                //默认一年,expires默认一个月
+                expires = expires || 30 * 24 * 60 * 60;
+                expires = expires * 1000;
+                var exp = new Date();  //获得当前时间  
+                exp.setTime(exp.getTime() + expires);  //换成毫秒  
+                document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString();
+            },
+            get_cookie: function (name) {
+                var arr = document.cookie.match(new RegExp("(^| )" + name + "=([^;]*)(;|$)"));
+                if (arr !== null) {
+                    return unescape(arr[2]);
+                } else {
+                    return "";
+                }
+            },
+            del_cookie: function (name) {
+                var exp = new Date();  //当前时间  
+                exp.setTime(exp.getTime() - 1);
+                var cval = getCookie(name);
+                if (cval !== null) {
+                    document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
+                }
             }
         };
 
@@ -164,7 +193,12 @@ var cardjs = {
                         if (!handler_index && handler_index !== 0) {
                             handler_index = obj_index;
                         }
-                        card.objs[obj_index].addEventListener(event, card.ev_handler[handler_index], false);
+                        if (card.objs[obj_index].addEventListener) {
+                            card.objs[obj_index].addEventListener(event, card.ev_handler[handler_index], false);
+                        } else {
+                            //ie
+                            card.objs[obj_index].attachEvent("on" + event, card.ev_handler[handler_index]);
+                        }
                         card.cjsv.evs[obj_index] = [event, handler_index];
                     },
                     off: function (event, obj_index, handler_index) {
@@ -172,7 +206,13 @@ var cardjs = {
                         if (!handler_index && handler_index !== 0) {
                             handler_index = obj_index;
                         }
-                        card.objs[obj_index].removeEventListener(event, card.ev_handler[handler_index], false);
+
+                        if (card.objs[obj_index].removeEventListener) {
+                            card.objs[obj_index].removeEventListener(event, card.ev_handler[handler_index], false);
+                        } else {
+                            //ie
+                            card.objs[obj_index].detachEvent("on" + event, card.ev_handler[handler_index]);
+                        }
                         if (card.cjsv.evs[obj_index]) {
                             delete card.cjsv.evs[obj_index];
                         }
@@ -247,14 +287,14 @@ var cardjs = {
                 // 生成一个虚方法，创建CARD实例时必须重写这个方法。
                 function gen_virtual_method(func_name) {
                     var fn = [].concat(func_name);
-                    fn.forEach(function (e) {
-                        card[e] = function () {
+                    for (var i = 0; i < fn.length; i++) {
+                        card[fn[i]] = function () {
                             if (card.settings.verbose) {
                                 console.log('CARD.' + fn + '(): please rewrite this method!');
                             }
                             return false;
                         };
-                    });
+                    }
                 }
 
                 // 自动释放通过 card.f.on 绑定的事件。后面的 remove_event 是手动。
@@ -394,11 +434,11 @@ var cardjs = {
                     if (!Array.isArray(cards) || cards.length <= 0) {
                         throw 'Error: PAGE(container_id,cards) cards should be an array!';
                     }
-                    cards.forEach(function (e) {
-                        if (!(e in cjs.o)) {
-                            throw 'Card ' + e + ' undefined!';
+                    for (var i = 0; i < cards.length; i++) {
+                        if (!(cards[i] in cjs.o)) {
+                            throw 'Card ' + cards[i] + ' undefined!';
                         }
-                    });
+                    }
                     pg.data = cards;
                     pg.settings.id_num = pg.data.length;
                 };
@@ -419,21 +459,21 @@ var cardjs = {
 
                 pg.before_add_event = function () {
                     pg.clean_up();
-                    pg.data.forEach(function (e, i) {
-                        if (cjs.o[e]) {
-                            pg.cards.push(cjs.o[e].cNew(pg.ids[i]).show());
+                    for (var i = 0; i < pg.data.length; i++) {
+                        if (cjs.o[pg.data[i]]) {
+                            pg.cards.push(cjs.o[pg.data[i]].cNew(pg.ids[i]).show());
                         } else {
-                            throw 'PAGE: ' + e + ' not define!';
+                            throw 'PAGE: ' + pg.data[i] + ' not define!';
                         }
-                    });
+                    }
                 };
 
                 pg.clean_up = function () {
-                    pg.cards.forEach(function (e) {
-                        if (e) {
-                            e.destroy();
+                    for (var i = 0; i < pg.cards.length; i++) {
+                        if (pg.cards[i]) {
+                            pg.cards[i].destroy();
                         }
-                    });
+                    }
                     pg.cards = [];
                 };
                 //do not call show() here! 
