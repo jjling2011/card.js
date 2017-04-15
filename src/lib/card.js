@@ -77,15 +77,21 @@ var cardjs = {
                     ('0' + myd.getDate()).slice(-2)
                 ].join('-'));
             },
-            gen_ids: function (head, num, len) {
-                len = len || 16;
-                var rid = head + '_' + cjs.f.rand(16) + '_';
-                var rtv = new Array();
-                for (var i = 0; i < num; ++i) {
-                    rtv.push(rid + i);
-                }
-                return rtv;
-            },
+            gen_ids: (function () {
+                var id_counter = 0;
+                return (
+                        function (head, num, len) {
+                            len = len || 8;
+                            var rid = head + '_' + id_counter + '_' + cjs.f.rand(len) + '_';
+                            id_counter++;
+                            var rtv = new Array();
+                            for (var i = 0; i < num; ++i) {
+                                rtv.push(rid + i);
+                            }
+
+                            return rtv;
+                        });
+            }()),
             gen_objs: function (ids) {
                 var rtv = new Array();
                 for (var i = 0; i < ids.length; i++) {
@@ -137,6 +143,9 @@ var cardjs = {
                 if (cval !== null) {
                     document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
                 }
+            },
+            isArray: function (obj) {
+                return Object.prototype.toString.call(obj) === "[object Array]";
             }
         };
 
@@ -431,7 +440,7 @@ var cardjs = {
 
 
                 pg.data_parser = function () {
-                    if (!Array.isArray(cards) || cards.length <= 0) {
+                    if (!cjs.f.isArray(cards) || cards.length <= 0) {
                         throw 'Error: PAGE(container_id,cards) cards should be an array!';
                     }
                     for (var i = 0; i < cards.length; i++) {
@@ -496,7 +505,7 @@ var cardjs = {
 
                 pn.pages = pages;
 
-                if (!Array.isArray(pn.pages) || pn.pages.length <= 0) {
+                if (!cjs.f.isArray(pn.pages) || pn.pages.length <= 0) {
                     throw 'PANEL(container_id, pages) pages should be an array. \n'
                             + 'eg. ["MainPage",["top_card","middle_card","bottom_card"]]';
                 }
