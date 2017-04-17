@@ -186,8 +186,12 @@ eg.o.fetch_data = {
                      * 参数：可以是字符串、数组 或 hash (注意serv.php中要做相应处理)
                      * 回调函数：参数data为json_object 
                      */
-                    fd.f.fetch('echo_str', 'helloooo', function (data) {
-                        fd.objs[1].innerHTML = eg.f.html_escape(data);
+//                    fd.f.fetch('echo_str', 'helloooo!', function (data) {
+//                        fd.objs[1].innerHTML = eg.f.html_escape(data);
+//                    });
+                    fd.f.fetch('checklogin', ['Amy','Adam'], function (data) {
+                        //console.log(data);
+                        fd.objs[1].innerHTML = eg.f.html_escape(JSON.stringify(data));
                     });
                     //fd.destroy();
                 }
