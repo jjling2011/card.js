@@ -261,7 +261,8 @@ var cardjs = {
                                     }.bind(self), card.settings.loading_tip_delay);
                         }
                     },
-                    fetch: function (op, param, func, verbose) {
+                    fetch: function (op, param, func_ok, verbose, func_fail) {
+                        func_fail = func_fail || false;
                         if (!cjs.f.isString(param)) {
                             param = JSON.stringify(param);
                         }
@@ -269,24 +270,27 @@ var cardjs = {
                         xhr.open('POST', card.settings.server_page);
                         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                         xhr.onload = function () {
-                            if (xhr.status === 200) {
-                                var raw_rsp = xhr.responseText;
-                                if (verbose) {
-                                    console.log('Fetch.raw:\n' + raw_rsp);
-                                }
-                                var rsp = JSON.parse(raw_rsp);
-                                if (rsp && rsp.status && rsp.data) {
-                                    if (card.self) {
-                                        func(rsp.data);
-                                    } else {
-                                        console.log('Fetch error: Object has been destroyed!');
-                                    }
-                                } else {
-                                    console.log('Fetch error: fetch data fail!');
-                                    console.log(rsp);
-                                }
-                            } else {
+                            if (xhr.status !== 200) {
                                 console.log('Fetch: Error code ' + xhr.status);
+                                return;
+                            }
+                            if (!(card.self)) {
+                                console.log('Fetch error: Object has been destroyed!');
+                                return;
+                            }
+                            var raw_rsp = xhr.responseText;
+                            if (verbose) {
+                                console.log('Fetch.raw:\n' + raw_rsp);
+                            }
+                            var rsp = JSON.parse(raw_rsp);
+                            if (rsp && rsp.status && rsp.data) {
+                                func_ok(rsp.data);
+                            } else {
+                                console.log('Fetch error: fetch data fail!');
+                                console.log(rsp);
+                                if (func_fail) {
+                                    func_fail(rsp.msg);
+                                }
                             }
                         };
                         xhr.send(encodeURI('op=' + op + '&data=' + param));
