@@ -18,7 +18,7 @@
  */
 
 
-var eg = cardjs.cNew();
+var eg = CardJS.cNew();
 
 /*
  * 创建实例后你还可以继续添加对象。

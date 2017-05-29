@@ -5,15 +5,38 @@
  * 2016-11-09
  */
 
-var cardjs = {
-    cNew: function () {
+var CardJS = {
+    cNew: function (settings) {
         var cjs = {
             //存放通过cardjs生成的对象,在PAGE/PANEL之间相互调用。
-            o: {}
+            o: {},
+            s: {server_page: 'serv.php'}
         };
+
+        // merge settings;
+        if (settings) {
+            for (var key in settings) {
+                // safty check is not necessary.
+                //if ((key in cjs.s) && settings[key].constructor === cjs.s[key].constructor) {
+                cjs.s[key] = settings[key];
+                //}
+            }
+        }
 
         //各通用小函数
         cjs.f = {
+            utf8_to_base64: function (text_utf8) {
+                //对应 php decode:
+                // $txt_utf8 = urldecode(base64_decode($txt_b64));
+                return btoa(encodeURIComponent(text_utf8));
+            },
+            base64_to_utf8: function (text_base64) {
+                // 对应 php encode: 
+                // $txt_b64 =base64_encode(rawurlencode($txt_utf8));
+                // **** 注意是带raw三个字母 **** 
+                // 不要问为什么！记住php是世界上最好的语言就对了！！
+                return (decodeURIComponent(atob(text_base64)));
+            },
             pad: function (n, width, z) {
                 z = z || '0';
                 n = n + '';
@@ -23,6 +46,9 @@ var cardjs = {
                 return Math.min(Math.max(val, min), max);
             },
             html_escape: function (unsafe) {
+                if (!unsafe || unsafe.length === 0) {
+                    return '';
+                }
                 return unsafe
                         .replace(/&/g, "&amp;")
                         .replace(/</g, "&lt;")
@@ -153,6 +179,7 @@ var cardjs = {
             cNew: function (container_id) {
                 var card = {
                     self: document.getElementById(container_id),
+
                     // 各个设置项
                     settings: {
                         // 标识实例类型
@@ -163,7 +190,7 @@ var cardjs = {
                          */
                         loading_tip_delay: 0,
                         // 服务页面url
-                        server_page: 'serv.php',
+                        server_page: cjs.s.server_page,
                         // 这个卡片有几个需要设置 id 的 html 元素
                         id_num: 0,
                         /* 
@@ -261,11 +288,90 @@ var cardjs = {
                                     }.bind(self), card.settings.loading_tip_delay);
                         }
                     },
-                    fetch: function (op, param, func_ok, verbose, func_fail) {
-                        func_fail = func_fail || false;
-                        if (!cjs.f.isString(param)) {
-                            param = JSON.stringify(param);
+                    fetch: function () {
+
+                        /* 
+                         * fetch( op,param,func_ok,func_fail,verbose)
+                         * 
+                         * 这些参数的位置可变
+                         * 
+                         * 第一个出现的函数为 func_ok(json_object) 操作成功时的回调函数。
+                         * 第二个出再的函数为 func_fail(string) 操作失败时的回调函数。
+                         * 
+                         * 非函数参数以下简称参数：
+                         * 第一个出现的参数必须为字符串，内容为 serv.php 中相应的函数名。
+                         * 第二个出现的参数为调用 serv.php 的函数的参数。
+                         * 如果最后一个参数是 Boolean 型，则作为是否显示调试信息开关：verbose。
+                         * 
+                         * 注意！如果只有两个参数，且最后一个为 Boolean 则此参数解释为调试信息开关。
+                         *                    
+                         */
+
+                        function type(obj) {
+                            return Object.prototype.toString.call(obj).slice(8, -1);
                         }
+
+                        var i, params = [], func = [];
+                        for (i = 0; i < arguments.length; i++) {
+                            switch (type(arguments[i])) {
+                                case 'Function':
+                                    func.push(arguments[i]);
+                                    break;
+                                default:
+                                    params.push(arguments[i]);
+                                    break;
+                            }
+                        }
+                        //console.log('param',params,'func',func);
+                        //console.log('fetch arguments:',arguments,'params:',params,'func:',func);
+
+
+                        if (params.length < 1 || type(params[0]) !== 'String') {
+                            console.log('error: cardjs.CARD.fetch()', 'parameters not match!');
+                            return;
+                        }
+
+                        var op, param = null, verbose = false;
+
+                        op = params[0];
+
+                        if (params.length > 1) {
+                            if (cjs.f.isString(params[1])) {
+                                param = params[1];
+                            } else {
+                                if (type(params[1]) === "Boolean" && params.length === 2) {
+                                    param = null;
+                                } else {
+                                    param = JSON.stringify(params[1]);
+                                }
+                            }
+                        }
+
+                        if (params.length > 1) {
+                            if (type(params[params.length - 1]) === "Boolean") {
+                                verbose = params[params.length - 1];
+                            }
+                        }
+
+                        if (func.length === 0) {
+                            func.push(function (r) {
+                                var flag = verbose;
+                                if (flag) {
+                                    console.log('Fetch:func_ok not set! \n Server response:');
+                                }
+                                console.log(r);
+                            });
+                        }
+                        if (func.length === 1) {
+                            func.push(function (r) {
+                                var flag = verbose;
+                                if (flag) {
+                                    console.log('Fetch:func_fail not set! \n Server response:');
+                                }
+                                console.log(r);
+                            });
+                        }
+
                         var xhr = new XMLHttpRequest();
                         xhr.open('POST', card.settings.server_page);
                         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -284,13 +390,11 @@ var cardjs = {
                             }
                             var rsp = JSON.parse(raw_rsp);
                             if (rsp && rsp.status && rsp.data) {
-                                func_ok(rsp.data);
+                                //function ok
+                                func[0](rsp.data);
                             } else {
-                                console.log('Fetch error: fetch data fail!');
-                                console.log(rsp);
-                                if (func_fail) {
-                                    func_fail(rsp.msg);
-                                }
+                                // function fial
+                                func[1](rsp.msg);
                             }
                         };
                         xhr.send(encodeURI('op=' + op + '&data=' + param));
@@ -571,7 +675,7 @@ var cardjs = {
                 };
 
                 pn.gen_html = function () {
-                    var html = '<div style="margin: 8px;">';
+                    var html = '<div >';
                     var num = pn.pages.length;
                     if (num > 0) {
                         html += '<div>';
