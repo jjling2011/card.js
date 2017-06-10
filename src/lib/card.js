@@ -1,5 +1,4 @@
 /* global define */
-
 /**/
 (function (name, context, definition) {
     // copy from https://github.com/ded/qwery/blob/master/src/qwery.js
@@ -48,6 +47,10 @@
                             // 显示debug信息 
                             verbose: false
                         };
+                        for (var key in gset) {
+                            this.settings[key] = gset[key];
+                        }
+                        //gset.forEach(function(e){this.});
                         /* 
                          * CARD内部使用的变量，设个奇怪的名包装起来不用占太多变量名。
                          * fyi. cjsv = cardjs_variables
@@ -383,7 +386,7 @@
 
                     Page.prototype.gen_html = function () {
                         var html = '';
-                        
+
                         for (var i = 0; i < this.cards.length; i++) {
                             html += '<div id="' + this.ids[i] + '" ';
                             if (this.style && this.style['card']) {
@@ -461,7 +464,7 @@
                                     }
                                     var page;
                                     if (this.style && this.style['card']) {
-                                        page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]], { 'card': this.style['card']});
+                                        page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]], {'card': this.style['card']});
                                     } else {
                                         page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]]);
                                     }
@@ -496,6 +499,14 @@
                             // **** 注意是带raw三个字母 **** 
                             // 不要问为什么！记住php是世界上最好的语言就对了！！
                             return (root.decodeURIComponent(root.atob(text_base64)));
+                        },
+                        set: function (params) {
+                            if (!(Lib.type(params) === 'Object')) {
+                                throw 'Error: CardJS.Lib.set( {key1:value1,key2:value2, ... });';
+                            }
+                            for (var key in params) {
+                                gset[key] = params[key];
+                            }
                         },
                         pad: function (n, width, leading_str) {
                             var z = leading_str || '0';
@@ -628,6 +639,9 @@
                                 root.document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
                             }
                         },
+                        isObject: function (o) {
+                            return (Lib.type(o) === 'Object');
+                        },
                         isString: function (v) {
                             return (typeof v === 'string' || v instanceof String);
                         },
@@ -635,6 +649,8 @@
                             return Object.prototype.toString.call(obj) === "[object Array]";
                         }
                     };
+
+                    var gset = {};
 
                     return ({
                         Lib: Lib,

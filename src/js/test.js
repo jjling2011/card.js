@@ -8,12 +8,17 @@
 
 //console.log(CardJS.Lib.rand());
 
+// override CardJS.Card.settings
+//CardJS.Lib.set({'serv_path':'hello.php'});
+
+
 var web = {
     o: {}
 };
 
 web.o.page=function(cid){
     var o=new CardJS.Page(cid,[web.o.card,web.o.card,web.o.card]);
+    //console.log('settings:',o.settings);
     return o;
 };
 
