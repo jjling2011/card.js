@@ -352,14 +352,15 @@
                         this.self = null;
                     };
 
-                    var Page = function (cid, cards) {
+                    var Page = function (cid, cards, style) {
+                        // style={'cards':css_name,'card':css_name};
                         if (!(Lib.isString(cid) && Lib.isArray(cards))) {
                             console.log('cid:', cid, ' cards:', cards);
                             throw 'Error: new Page(cid,[ card1, card2, ...] )';
                         }
-                        if (Lib.isString(cid)) {
-                            Card.call(this, cid);
-                        }
+
+                        Card.call(this, cid);
+                        this.style = style || null;
                         this.cards = cards;
                         this.settings.id_header = 'page';
                         this.children = [];
@@ -381,11 +382,15 @@
                     };
 
                     Page.prototype.gen_html = function () {
-                        var html = '<div style="width:100%;">';
+                        var html = '';
+                        
                         for (var i = 0; i < this.cards.length; i++) {
-                            html += '<div id="' + this.ids[i] + '"></div>';
+                            html += '<div id="' + this.ids[i] + '" ';
+                            if (this.style && this.style['card']) {
+                                html += ' class="' + this.style['card'] + '" ';
+                            }
+                            html += '></div>';
                         }
-                        html += '</div>';
                         return html;
                     };
 
@@ -396,12 +401,14 @@
                         }
                     };
 
-                    var Panel = function (cid, pages) {
+                    var Panel = function (cid, pages, style) {
                         //console.log('pages.type:', Lib.type(pages));
                         if (!(Lib.isString(cid) && Lib.type(pages) === 'Object')) {
                             throw 'Error: new Panel(cid,{name1:[card1, card2, ...],name2:[card, ...], ... )';
                         }
                         Card.call(this, cid);
+                        // style={'tags':css,'tag_active':css,'tag_normal':css,'page':css,'card':css};
+                        this.style = style || null;
                         this.tags = Object.keys(pages);
                         this.pages = pages;
                         this.child = null;
@@ -421,11 +428,19 @@
                     };
 
                     Panel.prototype.gen_html = function () {
-                        var html = '<div style="width:100%;">';
-                        for (var i = 0; i < this.tags.length; i++) {
-                            html += '<input type="button" id="' + this.ids[i] + '" value="' + this.tags[i] + '">';
+                        var html = '<div ';
+                        if (this.style && this.style['tags']) {
+                            html += ' class="' + this.style['tags'] + '"';
                         }
-                        html += '</div><div style="width:100%;" id="' + this.ids[i] + '"></div>';
+                        html += '>';
+                        for (var i = 0; i < this.tags.length; i++) {
+                            html += '<input type="button" id="' + this.ids[i] + '" value="' + this.tags[i] + '" >';
+                        }
+                        html += '</div><div id="' + this.ids[i] + '" ';
+                        if (this.style && this.style['page']) {
+                            html += ' class="' + this.style['page'] + '"';
+                        }
+                        html += '></div>';
                         return html;
                     };
 
@@ -436,10 +451,20 @@
                             (function () {
                                 var id = i;
                                 this.ev_handler.push(function () {
-                                    //console.log('ev_handler.push.this:',this);
-                                    //console.log('id:', id);
                                     this.clean_up();
-                                    var page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]]);
+                                    if (this.style && this.style['tag_active'] && this.style['tag_normal']) {
+                                        for (var j = 0; j < this.tags.length; j++) {
+                                            //pn.objs[i].setAttribute('class',
+                                            this.objs[j].setAttribute('class', this.style['tag_normal']);
+                                        }
+                                        this.objs[id].setAttribute('class', this.style['tag_active']);
+                                    }
+                                    var page;
+                                    if (this.style && this.style['card']) {
+                                        page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]], { 'card': this.style['card']});
+                                    } else {
+                                        page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]]);
+                                    }
                                     this.child = page.show();
                                 }.bind(this));
                             }.bind(this)());

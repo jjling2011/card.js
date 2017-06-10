@@ -22,6 +22,12 @@ web.o.panel=function(cid){
         'P1':[web.o.card],
         'P2':[web.o.card,web.o.card],
         'P3':[web.o.card,web.o.card,web.o.card]
+    },{
+        'tags':'tags',
+        'tag_normal':'tag-normal',
+        'tag_active':'tag-active',
+        'page':'page',
+        'card':'card'
     });
     return o;
 };

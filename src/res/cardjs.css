@@ -1,0 +1,73 @@
+.tags{
+    vertical-align: bottom;
+    text-align: left;
+}
+.tag-normal{
+    background: transparent;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    padding: 3px 8px 0px 8px;
+    border-radius: 8px 9px 0px 0px;
+}
+.tag-active{
+    background: skyblue;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    padding: 3px 8px 0px 8px;
+    border-radius: 8px 9px 0px 0px;
+}
+.page{
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+.card{
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+}
+
+.card-div{
+    margin:8px;
+}
+
+.card-btn{
+    font-size: 13px;
+    margin-right: 8px;
+    border: black solid 1px;
+    border-radius: 3px;
+    padding: 3px 10px 3px 10px;
+}
+
+.card-text{
+    margin-top: 8px;
+}
+
+.example-div{
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin-bottom: 8px;
+}
+
+.chess{
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border: 1px solid #ccc;
+}
+
+.cjs-btn{
+    font-size: 13px;
+    margin-right: 8px;
+    border: black solid 1px;
+    border-radius: 3px;
+    padding: 3px 10px 3px 10px;
+}
+
+.cjs-btn-blue{
+    font-size: 13px;
+    margin-right: 8px;
+    border: black solid 1px;
+    border-radius: 3px;
+    padding: 3px 10px 3px 10px;
+    background: skyblue;
+}

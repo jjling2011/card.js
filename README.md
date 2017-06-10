@@ -4,7 +4,7 @@ card.js用于简化动态生成网页时的代码编写过程。
   
 ###实例  
 [card.js演示页面][1]  
-*建议使用chrome浏览器获得最佳体验*  
+*建议使用chrome浏览器*  
   
 ###效果图    
 ![example.html效果图][2]  
@@ -14,72 +14,19 @@ card.js用于简化动态生成网页时的代码编写过程。
 通常一个网页可以划分成不同的部分，每个部分都有自己的事件响应函数。  
 从零开始手工编写要考虑不同部分的id分配，事件绑定以及删除解绑问题。  
 card.js的设计目的就是简化这些工作。  
-它将网页每个部分看成一个“卡片”，通过调用card.js里的CARD对象创建及绑定事件。  
-多个CARD可以集合成一个PAGE，然后通过PANEL实现多个PAGE之间动态切换。  
-（PANEL可以类比看成网页的导航栏）  
+它将网页每个部分看成一个“卡片”，通过调用card.js里的Card对象创建及绑定事件。  
+多个Card集合成一个Page，然后通过Panel实现多个Page之间动态切换。  
+（Panel可以类比看成浏览器的标签栏）  
+    
+###card.js导出对象  
+card.js默认导出 CardJS，包含以下四个对象  
+CardJS.Lib 通用函数，可直接调用  
+CardJS.Card 生成网页中的各个"卡片"  
+CardJS.Page 将多个“卡片”整合开成一个“页”  
+CardJS.Panel 将多个“页”整合成“面板”，并实现动态切换  
   
-###card.js组成部分  
-cjs.f 通用小函数  
-cjs.CARD 生成网页中的各个"卡片"  
-cjs.PAGE 将多个“卡片”整合开成一个“页”  
-cjs.PANEL 将多个“页”整合成“面板”，并实现动态切换  
-cjs.o 存放各通过card.js制作出来的对象，供PAGE及PANEL调用。
-
-###示例    
-一个简单的“卡片”大概长这样子：  
-```js
-// src/js/eg.js
-
-// 创建cardjs实例。
-var eg = cardjs.cNew();
-
-eg.o.simple_card = {
-    cNew: function (container_id) {
-
-        // 创建cjs.CARD实例。
-        var scard = eg.CARD.cNew(container_id);
-
-        // 生成界面代码
-        scard.gen_html = function () {
-            return '<div>这是一个简单的卡片示例</div>';
-        };
-
-        return scard;
-    }
-};
-```
-在html文件中调用上面的“卡片”：  
-```html
-<html>
-    <head>
-        <title>eg</title>
-        <meta charset="utf-8">
-        <script type="text/javascript" src="lib/card.js"></script>
-        <script type="text/javascript" src="js/eg.js"></script>
-    </head>
-    <body>
-        <div id="my_card" ></div>
-        <script>
-            var sc = eg.o.simple_card.cNew('my_card').show();
-        </script>
-    </body>
-</html>
-```
-这么多代码就显示一行字也太麻烦了对吧？  
-但有了上面的工作后动态切换多个“卡片”就很简单： 
-```js
-eg.o.my_panel = {
-    cNew: function (container_id) {
-        var mp = eg.PANEL.cNew(container_id, [
-            ['三个卡片', ['simple_card','simple_card','simple_card']],
-            ['单个卡片', ['simple_card']]]);
-        return mp;
-    }
-};
-```
-上面这个例子很无聊，只是不断的显示“这是一个 ...”。  
-更详细的例子请看src里的example  
-
+详细用法请看 example.html 及 example.js  
+  
 ###协议  
 GPLv3  
   
