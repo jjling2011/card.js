@@ -4,30 +4,30 @@
         <title>cardjs example</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=380, maximum-scale=1">
-        <link rel="stylesheet" href="res/example.css?t=201610291622">
+        <link rel="stylesheet" href="res/cardjs.css?t=201610291622">
         <script type="text/javascript" src="lib/card.js?t=20161118"></script>
         <script type="text/javascript" src="js/sain.js?t=20161118"></script>
         <script type="text/javascript" src="js/example.js?t=20161118"></script>
     </head>
     <body>
         <div style="margin:8px;width:350px;padding: 5px;">
-            简单卡片(eg.o.simple_card):
-            <div id="simple_card" class="cjs-div"></div>
-            <br>事件响应(eg.o.timer_card):
-            <div id="timer_card" class="cjs-div"></div>
-            <br>多卡片面板(eg.o.my_panel):
-            <div id="my_panel" class="cjs-div"></div>
-            <br>动态获取数据(eg.o.fetch_data):
-            <div id="fetch_data" class="cjs-div"></div>
-            <br>井字过三关(eg.o.cboard):
-            <div id="chess" class="cjs-div"></div>
+            简单卡片(web.o.card):
+            <div id="card" class="example-div"></div>
+            事件响应(web.o.card_ev):
+            <div id="card_ev" class="example-div"></div>
+            多卡片面板(web.o.panel):
+            <div id="panel" class="example-div"></div>
+            动态获取数据(web.o.card_fetch):
+            <div id="card_fetch" class="example-div"></div>
+            井字过三关(web.o.cboard):
+            <div id="chess" class="example-div"></div>
         </div>
         <script>
-            var sc = eg.o.simple_card.cNew('simple_card').show();
-            var tc = eg.o.timer_card.cNew('timer_card').show();
-            var pn = eg.o.my_panel.cNew('my_panel').show();
-            var fd = eg.o.fetch_data.cNew('fetch_data').show();
-            var cb = eg.o.cboard.cNew('chess').show();
+            var card=web.o.card('card').show();
+            var card_ev=web.o.card_ev('card_ev').show();
+            var panel=web.o.panel('panel').show();
+            var card_fetch=web.o.card_fetch('card_fetch').show();
+            var cb = web.o.cboard('chess').show();
         </script>
     </body>
 </html>
