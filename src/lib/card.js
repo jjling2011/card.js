@@ -1,5 +1,7 @@
-/* global define */
+// https://github.com/jjling2011/card.js
+// GPL-3.0
 
+/* global define */
 /**/
 (function (name, context, definition) {
     // copy from https://github.com/ded/qwery/blob/master/src/qwery.js
@@ -32,6 +34,8 @@
                     }
 
                     var Card = function (container_id) {
+                        var key;
+
                         this.self = root.document.getElementById(container_id);
                         this.settings = {
                             // 服务页面url
@@ -48,6 +52,11 @@
                             // 显示debug信息 
                             verbose: false
                         };
+
+                        for (key in gset) {
+                            this.settings[key] = gset[key];
+                        }
+
                         /* 
                          * CARD内部使用的变量，设个奇怪的名包装起来不用占太多变量名。
                          * fyi. cjsv = cardjs_variables
@@ -55,10 +64,90 @@
                         this.cjsv = {
                             timer: {},
                             evs: [],
+                            ev_handler: {},
                             cid: container_id,
                             loading_tip_timer: null,
                             event_flag: false
                         };
+
+                        this.f = {};
+                        for (key in funcs) {
+                            this.f[key] = funcs[key].bind(this);
+                        }
+
+                    };
+
+                    // 关键方法，生成、绑定、解绑事件，生成、显示界面，数据处理。
+                    Card.prototype.show = function () {
+                        var that = this;
+                        if (this.cjsv.event_flag) {
+                            for (var key in this.cjsv.timer) {
+                                this.f.clear_timer(key);
+                            }
+                            // why netbeans consider 'this' is a global var if I replace 'that' with 'this' ?
+                            that.cjsv.timer = {};
+
+                            call_method.bind(this)('remove_event', true);
+
+                            release_event.bind(this)();
+
+                            this.cjsv.event_flag = false;
+                        }
+                        call_method.bind(this)('data_parser');
+                        if (this.settings.id_num >= 1) {
+                            this.ids = gen_ids(this.settings.id_header, this.settings.id_num);
+                        }
+                        this.self.innerHTML = this.gen_html();
+                        if (this.settings.id_num >= 1) {
+                            this.objs = gen_objs(this.ids);
+                        }
+                        call_method.bind(this)('before_add_event');
+                        if (this.settings.id_num >= 1 && this.settings.add_event) {
+                            var evh = call_method.bind(this)('gen_ev_handler', true);
+
+                            if (!(Lib.isArray(evh) || Lib.isObject(evh))) {
+                                throw new Error('Card.cjsv.ev_handler should be [func1(), ... ] or { name1:func1(), ... }');
+                            }
+
+                            that.cjsv.ev_handler = {};
+                            for (var key in evh) {
+                                this.cjsv.ev_handler[key] = evh[key].bind(this);
+                            }
+
+                            if (!this.cjsv.event_flag) {
+                                call_method.bind(this)('add_event', true);
+                                this.cjsv.event_flag = true;
+                            }
+                        }
+                        call_method.bind(this)('after_add_event');
+                        return this;
+                    };
+                    /* 
+                     * 销毁时进行一些清理工作。
+                     * 如果还有些其他要清理的东西可以写个
+                     * card.clean_up=function(){
+                     *   ... 你想清理的东西 ...
+                     * };
+                     */
+                    Card.prototype.destroy = function () {
+                        var that = this;
+
+                        for (var key in this.cjsv.timer) {
+                            this.f.clear_timer(key);
+                        }
+                        that.cjsv.timer = {};
+
+                        //console.log('this:', this, ' that:', that);
+
+                        if (this.cjsv.event_flag) {
+                            call_method.bind(this)('remove_event', true);
+                            release_event.bind(this)();
+                            this.cjsv.event_flag = false;
+                        }
+
+                        call_method.bind(this)('clean_up');
+                        //this.cjsv.timer={};
+                        this.self = null;
                     };
 
                     var gen_ids = (function () {
@@ -86,33 +175,42 @@
                     };
 
                     var funcs = {
-                        on: function (event, obj_index, handler_index) {
-                            // 绑定事件
-                            if (!handler_index && handler_index !== 0) {
-                                handler_index = obj_index;
+                        trigger: function (key) {
+                            if (!(key in this.cjsv.ev_handler)) {
+                                throw new Error('Error: Card.cjsv.ev_handler[', key, '] not define!');
                             }
+                            this.cjsv.ev_handler[key]();
+                        },
+                        on: function (event, obj_index, key) {
+
+                            // 绑定事件
+                            if (key === undefined) {
+                                key = obj_index;
+                            }
+
+                            if (!(key in this.cjsv.ev_handler)) {
+                                throw new Error('Error: Card.f.on: ev_handler[', key, '] not define!');
+                            }
+
                             if (this.objs[obj_index].addEventListener) {
-                                this.objs[obj_index].addEventListener(event, this.ev_handler[handler_index], false);
+                                this.objs[obj_index].addEventListener(event, this.cjsv.ev_handler[key], false);
                             } else {
                                 //ie
-                                this.objs[obj_index].attachEvent("on" + event, this.ev_handler[handler_index]);
+                                this.objs[obj_index].attachEvent("on" + event, this.cjsv.ev_handler[key]);
                             }
-                            this.cjsv.evs[obj_index] = [event, handler_index];
+                            this.cjsv.evs.push([event, obj_index, key]);
                         },
-                        off: function (event, obj_index, handler_index) {
+                        off: function (event, obj_index, key) {
                             // 解绑事件
-                            if (!handler_index && handler_index !== 0) {
-                                handler_index = obj_index;
+                            if (key === undefined) {
+                                key = obj_index;
                             }
 
                             if (this.objs[obj_index].removeEventListener) {
-                                this.objs[obj_index].removeEventListener(event, this.ev_handler[handler_index], false);
+                                this.objs[obj_index].removeEventListener(event, this.cjsv.ev_handler[key], false);
                             } else {
                                 //ie
-                                this.objs[obj_index].detachEvent("on" + event, this.ev_handler[handler_index]);
-                            }
-                            if (this.cjsv.evs[obj_index]) {
-                                delete this.cjsv.evs[obj_index];
+                                this.objs[obj_index].detachEvent("on" + event, this.cjsv.ev_handler[key]);
                             }
                         },
                         merge: function (s) {
@@ -137,8 +235,8 @@
                         set_timer: function (call_back, interval, num) {
                             num = num || 0;
                             interval = interval || 3000;
-                            this.f('clear_timer', num);
-                            call_back();
+                            this.f.clear_timer(num);
+                            call_back.bind(this)();
                             this.cjsv.timer[num] = root.setInterval(call_back, interval);
                         },
                         fetch: function () {
@@ -178,7 +276,7 @@
 
 
                             if (params.length < 1 || Lib.type(params[0]) !== 'String') {
-                                throw 'error: cardjs.CARD.fetch()', 'parameters not match!';
+                                throw new Error('error: cardjs.CARD.fetch()', 'parameters not match!');
                             }
 
                             var op, param = null, verbose = false;
@@ -251,112 +349,47 @@
                         }
                     };
 
-                    Card.prototype.f = function () {
-                        if (arguments.length < 1) {
-                            return;
-                        }
-                        var args = [];
-                        Array.prototype.push.apply(args, arguments);
-                        var fn = args.shift();
-                        //console.log('fn:',fn,'arg:',args);
-                        //console.log();
-                        if (fn in funcs) {
-                            return funcs[fn].apply(this, args);
-                            //console.log(this);
-                            //return rtv;
-                        } else {
-                            throw 'error: Card.funcs.' + fn + ' not exist!';
-                        }
-                    };
                     // 标识实例类型
                     Card.prototype.name = 'CARD';
                     Card.prototype.gen_html = function () {
                         console.log('Card.prototype.gen_html(): Please rewrite this function.');
                         return '';
                     };
+
                     // 自动释放通过 card.f.on 绑定的事件。后面的 remove_event 是手动。
                     function release_event() {
                         if (this.cjsv.evs.length > 0) {
-                            for (var key in this.cjsv.evs) {
-                                if (this.cjsv.evs[key]) {
-                                    this.f('off', this.cjsv.evs[key][0], key, this.cjsv.evs[key][1]);
-                                    delete this.cjsv.evs[key];
-                                }
+                            //console.log('before release_event:', this.cjsv.evs);
+                            var e = this.cjsv.evs;
+                            for (var key in e) {
+                                e[key] && this.f.off(e[key][0], e[key][1], e[key][2]);
                             }
-                            this.cjsv.evs = [];
+                            //console.log('after release_event:', this.cjsv.evs);
                         }
+                        this.cjsv.evs = [];
+                        var that = this;
+                        that.cjsv.ev_handler = {};
                     }
+
                     // 如果card中有就调用，没有就显示一行debug信息。
                     function call_method(fn, warn) {
                         //console.log(this,fn,warn);
                         if (fn in this) {
-                            this[fn]();
-                        } else {
-                            if (warn && this.settings.verbose) {
-                                console.log('Call undefine method: Card.prototype.funcs.' + fn + '()');
-                            }
+                            return(this[fn]());
                         }
+                        if (warn && this.settings.verbose) {
+                            console.log('Call undefine method: Card.prototype.funcs.' + fn + '()');
+                        }
+                        return false;
                     }
 
-                    // 关键方法，生成、绑定、解绑事件，生成、显示界面，数据处理。
-                    Card.prototype.show = function () {
-                        var that = this;
-                        if (this.cjsv.event_flag) {
-                            call_method.bind(this)('remove_event', true);
-                            release_event.bind(this)();
-                            for (var key in this.cjsv.timer) {
-                                this.f('clear_timer', key);
-                            }
-                            that.cjsv.timer = {};
-                            this.cjsv.event_flag = false;
-                        }
-                        call_method.bind(this)('data_parser');
-                        if (this.settings.id_num >= 1) {
-                            this.ids = gen_ids(this.settings.id_header, this.settings.id_num);
-                        }
-                        this.self.innerHTML = this.gen_html();
-                        if (this.settings.id_num >= 1) {
-                            this.objs = gen_objs(this.ids);
-                        }
-                        call_method.bind(this)('before_add_event');
-                        if (this.settings.id_num >= 1 && this.settings.add_event) {
-                            call_method.bind(this)('gen_ev_handler', true);
-                            if (!this.cjsv.event_flag) {
-                                call_method.bind(this)('add_event', true);
-                                this.cjsv.event_flag = true;
-                            }
-                        }
-                        call_method.bind(this)('after_add_event');
-                        return this;
-                    };
-                    /* 
-                     * 销毁时进行一些清理工作。
-                     * 如果还有些其他要清理的东西可以写个
-                     * card.clean_up=function(){
-                     *   ... 你想清理的东西 ...
-                     * };
-                     */
-                    Card.prototype.destroy = function () {
-                        var that = this;
-                        if (this.cjsv.event_flag) {
-                            call_method.bind(this)('remove_event', true);
-                            release_event.bind(this)();
-                            this.cjsv.event_flag = false;
-                        }
-                        for (var key in this.cjsv.timer) {
-                            this.f('clear_timer', key);
-                        }
-                        that.cjsv.timer = {};
-                        call_method.bind(this)('clean_up');
-                        //this.cjsv.timer={};
-                        this.self = null;
-                    };
+
 
                     var Page = function (cid, cards, style) {
                         // style={'cards':css_name,'card':css_name};
                         if (!(Lib.isString(cid) && Lib.isArray(cards))) {
                             console.log('cid:', cid, ' cards:', cards);
-                            throw 'Error: new Page(cid,[ card1, card2, ...] )';
+                            throw new Error('Error: new Page(cid,[ card1, card2, ...] )');
                         }
 
                         Card.call(this, cid);
@@ -375,15 +408,15 @@
                     };
 
                     Page.prototype.clean_up = function () {
-                        this.children.forEach(function (e) {
-                            e.destroy();
-                        });
+                        for (var key in this.children) {
+                            this.children[key].destroy();
+                        }
                         this.children = [];
                     };
 
                     Page.prototype.gen_html = function () {
                         var html = '';
-                        
+
                         for (var i = 0; i < this.cards.length; i++) {
                             html += '<div id="' + this.ids[i] + '" ';
                             if (this.style && this.style['card']) {
@@ -404,7 +437,7 @@
                     var Panel = function (cid, pages, style) {
                         //console.log('pages.type:', Lib.type(pages));
                         if (!(Lib.isString(cid) && Lib.type(pages) === 'Object')) {
-                            throw 'Error: new Panel(cid,{name1:[card1, card2, ...],name2:[card, ...], ... )';
+                            throw new Error('Error: new Panel(cid,{name1:[card1, card2, ...],name2:[card, ...], ... )');
                         }
                         Card.call(this, cid);
                         // style={'tags':css,'tag_active':css,'tag_normal':css,'page':css,'card':css};
@@ -445,12 +478,12 @@
                     };
 
                     Panel.prototype.gen_ev_handler = function () {
-                        this.ev_handler = [];
+                        var evs = [];
                         //console.log('gen_ev_handler.this:',this);
                         for (var i = 0; i < this.tags.length; i++) {
                             (function () {
                                 var id = i;
-                                this.ev_handler.push(function () {
+                                evs.push(function () {
                                     this.clean_up();
                                     if (this.style && this.style['tag_active'] && this.style['tag_normal']) {
                                         for (var j = 0; j < this.tags.length; j++) {
@@ -461,24 +494,25 @@
                                     }
                                     var page;
                                     if (this.style && this.style['card']) {
-                                        page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]], { 'card': this.style['card']});
+                                        page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]], {'card': this.style['card']});
                                     } else {
                                         page = new Page(this.ids[this.tags.length], this.pages[this.tags[id]]);
                                     }
                                     this.child = page.show();
-                                }.bind(this));
-                            }.bind(this)());
+                                });
+                            }());
                         }
+                        return evs;
                     };
 
                     Panel.prototype.add_event = function () {
                         for (var i = 0; i < this.tags.length; i++) {
-                            this.f('on', 'click', i);
+                            this.f.on('click', i);
                         }
                     };
 
                     Panel.prototype.after_add_event = function () {
-                        this.ev_handler[0]();
+                        this.f.trigger(0);
                     };
 
 
@@ -496,6 +530,14 @@
                             // **** 注意是带raw三个字母 **** 
                             // 不要问为什么！记住php是世界上最好的语言就对了！！
                             return (root.decodeURIComponent(root.atob(text_base64)));
+                        },
+                        set: function (params) {
+                            if (!(Lib.type(params) === 'Object')) {
+                                throw new Error('Error: CardJS.Lib.set( {key1:value1,key2:value2, ... });');
+                            }
+                            for (var key in params) {
+                                gset[key] = params[key];
+                            }
                         },
                         pad: function (n, width, leading_str) {
                             var z = leading_str || '0';
@@ -518,7 +560,7 @@
                         },
                         array_remove_all: function (arr, value) {
                             if (!Lib.isArray(arr)) {
-                                throw 'Error: arr is not an array!';
+                                throw new Error('Error: arr is not an array!');
                             }
                             for (var i = arr.length; i >= 0; --i) {
                                 if (arr[i] === value) {
@@ -528,7 +570,7 @@
                         },
                         array_cut_tail: function (arr, len) {
                             if (!Lib.isArray(arr)) {
-                                throw 'Error: arr is not an array!';
+                                throw new Error('Error: arr is not an array!');
                             }
                             len = len || 25;
                             while (arr.length > len) {
@@ -537,7 +579,7 @@
                         },
                         array_unshift: function (arr, el, len) {
                             if (!Lib.isArray(arr)) {
-                                throw 'Error: arr is not an array!';
+                                throw new Error('Error: arr is not an array!');
                             }
                             len = len || 25;
                             Lib.array_remove_all(el);
@@ -556,6 +598,13 @@
                             }
                             return rtv;
                         },
+                        get_DOM_offset: function (el) {
+                            el = el.getBoundingClientRect();
+                            return {
+                                left: el.left + root.scrollX + el.width,
+                                top: el.top + root.scrollY + el.height
+                            };
+                        },
                         url_get_page: function () {
                             var url = root.document.location.href;
                             url = url.substring(0, (url.indexOf("#") === -1) ? url.length : url.indexOf("#"));
@@ -564,7 +613,8 @@
                             return url;
                         },
                         url_set_param: function (page, params) {
-                            params = params | {};
+                            params = params || {};
+                            //console.log('url_set_param:',page,params);
                             if (root.history.pushState) {
                                 var pstr = '', dl = '?';
                                 for (var key in params) {
@@ -628,6 +678,9 @@
                                 root.document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
                             }
                         },
+                        isObject: function (o) {
+                            return (Lib.type(o) === 'Object');
+                        },
                         isString: function (v) {
                             return (typeof v === 'string' || v instanceof String);
                         },
@@ -635,6 +688,8 @@
                             return Object.prototype.toString.call(obj) === "[object Array]";
                         }
                     };
+
+                    var gset = {};
 
                     return ({
                         Lib: Lib,
