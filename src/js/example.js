@@ -47,7 +47,7 @@ web.o.card_ev = function (container_id) {
     var o = new CardJS.Card(container_id);
 
     //修改设置
-    o.f('merge', {
+    o.f.merge( {
         id_num: 3,
         id_header: 'tcard',
         add_event: true
@@ -67,9 +67,9 @@ web.o.card_ev = function (container_id) {
         window.console.log(o.ids[2] + ": " + o.objs[2].innerHTML);
     };
 
-    // 生成处理事件的函数组（名字必须用 ev_handler）
+    // 生成处理事件的函数组,返回值 [func1,func2,func3, ... ]
     o.gen_ev_handler = function () {
-        o.ev_handler = [
+        var evs = [
             function () {
                 /*
                  * 通过 cjs.CARD.f.set_timer设置的时钟，
@@ -77,18 +77,19 @@ web.o.card_ev = function (container_id) {
                  * 可以通过些函数的第三个参数来设置多个时钟。
                  * 详见 card.js 的 cjs.CARD.f.set_timer 函数。
                  */
-                o.f('set_timer', o.update, 1000);
+                o.f.set_timer( o.update, 1000);
             },
             function () {
-                o.f('clear_timer');
+                o.f.clear_timer();
             }
         ];
+        return evs;
     };
 
     /*
      * 将事件与ev_handler处理函数绑定起来。
-     * 通过 obj.f('on', ... ) 绑定的事件在重绘(show)或销毁(destroy)时自动释放。
-     * 也可以用 obj.f('off', ... ) 手工解绑。
+     * 通过 obj.f.on( ... ) 绑定的事件在重绘(show)或销毁(destroy)时自动释放。
+     * 也可以用 obj.f.off( ... ) 手工解绑。
      * 
      * 特殊情况可以在add_event中手工添加事件，然后：
      *  o.remove_event=functio(){
@@ -97,8 +98,8 @@ web.o.card_ev = function (container_id) {
      */
 
     o.add_event = function () {
-        o.f('on', 'click', 0);
-        o.f('on', 'click', 1);
+        o.f.on( 'click', 0);
+        o.f.on( 'click', 1);
     };
 
     return o;
@@ -136,7 +137,7 @@ web.o.panel = function (cid) {
  */
 web.o.card_fetch = function (container_id) {
     var o = new CardJS.Card(container_id);
-    o.f('merge', {
+    o.f.merge( {
         id_num: 3,
         id_header: 'fetch',
         add_event: true
@@ -150,7 +151,7 @@ web.o.card_fetch = function (container_id) {
     };
 
     o.gen_ev_handler = function () {
-        o.ev_handler = [
+        var evs = [
             function () {
                 /*
                  * 默认从serv.php获取数据，可以通过 fd.settings.server_page指定。
@@ -162,17 +163,18 @@ web.o.card_fetch = function (container_id) {
 //                    fd.f.fetch('echo_str', 'helloooo!', function (data) {
 //                        fd.objs[1].innerHTML = eg.f.html_escape(data);
 //                    });
-                o.f('fetch', 'checklogin', ['Amy', 'Adam'], function (data) {
+                o.f.fetch( 'checklogin', ['Amy', 'Adam'], function (data) {
                     //console.log(data);
                     o.objs[1].innerHTML = CardJS.Lib.html_escape(window.JSON.stringify(data));
                 });
                 //fd.destroy();
             }
         ];
+        return evs;
     };
 
     o.add_event = function () {
-        o.f('on', 'click', 0);
+        o.f.on( 'click', 0);
     };
 
     return o;
@@ -182,7 +184,7 @@ web.o.card_fetch = function (container_id) {
     web.o.cboard = function (container_id) {
             var cb = new CardJS.Card(container_id);
 
-            cb.f('merge',{
+            cb.f.merge({
                 id_num: 21,
                 id_header: 'chess_boardd',
                 add_event: true
@@ -347,9 +349,9 @@ web.o.card_fetch = function (container_id) {
             };
 
             cb.gen_ev_handler = function () {
-                cb.ev_handler = [];
+                var evs = [];
                 for (var i = 0; i < 9; ++i) {
-                    cb.ev_handler[i] = function () {
+                    evs[i] = function () {
                         var id = i;
                         return function () {
 
@@ -375,7 +377,7 @@ web.o.card_fetch = function (container_id) {
                                 } else {
                                     cb.com.feedback(revfb[r]);
                                 }
-                                cb.ev_handler[11]();
+                                cb.f.trigger(11);
                                 if (cb.com.name === 'jhon') {
                                     cb.first_move();
                                 }
@@ -383,28 +385,28 @@ web.o.card_fetch = function (container_id) {
                         };
                     }();
                 }
-                cb.ev_handler[11] = function () {
+                evs[11] = function () {
                     cb.init_board();
                     cb.jhon.reset();
                     cb.sam.reset();
                     cb.show_board();
                 };
-                cb.ev_handler[9] = function () {
+                evs[9] = function () {
                     cb.init_board();
-                    cb.f('set_timer',cb.auto, 3000);
+                    cb.f.set_timer(cb.auto, 3000);
                 };
-                cb.ev_handler[10] = function () {
-                    cb.f('clear_timer');
+                evs[10] = function () {
+                    cb.f.clear_timer();
                 };
-                cb.ev_handler[12] = function () {
+                evs[12] = function () {
                     var url = cb.jhon.save();
                     cb.objs[13].innerHTML = '<a href="' + url + '" download="Jhon.json">Jhon</a>';
                 };
-                cb.ev_handler[15] = function () {
+                evs[15] = function () {
                     var url = cb.sam.save();
                     cb.objs[16].innerHTML = '<a href="' + url + '" download="Sam.json">Sam</a>';
                 };
-                cb.ev_handler[14] = function () {
+                evs[14] = function () {
                     var file = cb.objs[14].files[0];
                     if (file && file.size) {
                         var reader = new FileReader();
@@ -417,7 +419,7 @@ web.o.card_fetch = function (container_id) {
                         console.log("file error!");
                     }
                 };
-                cb.ev_handler[17] = function () {
+                evs[17] = function () {
                     var file = cb.objs[17].files[0];
                     if (file && file.size) {
                         var reader = new FileReader();
@@ -430,8 +432,8 @@ web.o.card_fetch = function (container_id) {
                         console.log("file error!");
                     }
                 };
-                cb.ev_handler[19] = function () {
-                    cb.ev_handler[11]();
+                evs[19] = function () {
+                    cb.f.trigger(11);
                     cb.com = cb.jhon;
                     cb.first_move();
                     console.log('Jhon: online!');
@@ -439,13 +441,14 @@ web.o.card_fetch = function (container_id) {
                     cb.objs[20].setAttribute('class', 'cjs-btn');
 
                 };
-                cb.ev_handler[20] = function () {
-                    cb.ev_handler[11]();
+                evs[20] = function () {
+                    cb.f.trigger(11);
                     cb.com = cb.sam;
                     console.log('Sam: online!');
                     cb.objs[20].setAttribute('class', 'cjs-btn-blue');
                     cb.objs[19].setAttribute('class', 'cjs-btn');
                 };
+                return evs;
             };
 
             cb.first_move = function () {
@@ -456,17 +459,17 @@ web.o.card_fetch = function (container_id) {
             cb.add_event = function () {
                 var i;
                 for (i = 0; i < 9; ++i) {
-                    cb.f('on','click', i);
+                    cb.f.on('click', i);
                 }
                 var d = [9, 10, 11, 12, 15, 19, 20];
                 for (i = 0; i < d.length; i++) {
-                    cb.f('on','click', d[i]);
+                    cb.f.on('click', d[i]);
                 }
                 ;
                 d = [14, 17];
                 for (i = 0; i < d.length; i++) {
 
-                    cb.f('on','change', d[i]);
+                    cb.f.on('change', d[i]);
                 }
             };
 
