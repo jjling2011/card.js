@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* global CardJS */
+/* global CardJS, Mustache */
 
 //console.log(CardJS.Lib.rand());
 
@@ -41,39 +41,45 @@ web.o.panel = function (cid) {
 web.o.card = function (cid) {
     var o = new CardJS.Card(cid);
     o.f.merge({
-        id_header: 'card',
-        id_num: 2,
+        header: 'card',
         add_event: true
     });
-    //console.log(o);
+    
     o.gen_html = function () {
-        var html = '';
-        html = '<input type="button" value="click me" id="' + o.ids[0] + '"><div id="' + o.ids[1] + '"></div>';
-        return html;
+        //return  '<input type="button" value="click me" id="' + o.elid('fetch') + '"><div id="' + o.elid('content') + '"></div>';
+        var names=['fetch','content'];
+        o.ids={};
+        for(var i=0;i<names.length;i++){
+            o.ids[names[i]]=o.el(names[i]);
+        }
+        
+        var template='<input type="button" value="click me" id="{{ids.fetch}}">'+
+                '<div id="{{ids.content}}" ></div>';
+        return Mustache.render(template,o);
+        //return html;
     };
 
     o.gen_ev_handler = function () {
-        var evs = [
-            function () {
+        var evs = {
+            'fetch': function () {
                 //console.log('hello!');
                 o.f.fetch('checklogin', ['Amy', 'Adam'], function (data) {
                     //console.log('func_success.this:',this);
                     console.log(data);
-                    this.objs[1].innerHTML = window.JSON.stringify(data);
+                    this.el('content',true).innerHTML = window.JSON.stringify(data);
                     //fd.objs[1].innerHTML = eg.f.html_escape(JSON.stringify(data));
                 });
-
             }
-        ];
+        };
         return evs;
     };
 
     o.add_event = function () {
         //console.log('card add_event');
-        o.f.on('click', 0);
+        o.f.on('click', 'fetch');
     };
-    
-    o.after_add_event=function(){
+
+    o.after_add_event = function () {
         //console.log('card after_add_event');
         //o.f.off('click',0);
         //o.f.off('click',0);
