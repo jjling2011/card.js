@@ -1,15 +1,19 @@
 .tags{
     vertical-align: bottom;
     text-align: left;
+    
 }
 .tag-normal{
     background: transparent;
     border: 1px solid #ccc;
     font-size: 14px;
+    color:#888;
     padding: 3px 8px 0px 8px;
     border-radius: 8px 9px 0px 0px;
 }
 .tag-active{
+    color:#000;
+    
     background: skyblue;
     border: 1px solid #ccc;
     font-size: 14px;

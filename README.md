@@ -1,5 +1,6 @@
-card.js用于简化动态生成网页时的代码编写过程。  
-主要部分详见 `src/lib/card.js` 及 `src/serv.php`   
+card.js用于编写单面应用(SPA)，非常简陋的js库。  
+前端代码： `src/lib/card.js`  
+后端代码： `src/serv.php`     
 使用方法详见示例 `example.html` 及 `example.js`  
   
 ### 实例 ###  
@@ -19,18 +20,16 @@ card.js的设计目的就是简化这些工作。
 （Panel可以类比看成浏览器的标签栏）  
     
 ### card.js导出对象 ###  
-card.js默认导出 CardJS，包含以下四个对象  
-CardJS.Lib 通用函数，可直接调用  
-CardJS.Card 生成网页中的各个"卡片"  
-CardJS.Page 将多个“卡片”整合开成一个“页”  
-CardJS.Panel 将多个“页”整合成“面板”，并实现动态切换  
+card.js默认导出 CardJS，包含以下对象  
+cardjs.set 设置初始参数（通常用不上）
+cardjs.lib 通用函数，可直接调用  
+cardjs.card 生成网页中的各个"卡片"  
+cardjs.create 简化Card/Page/Panel创建过程的函数。  
   
 详细用法请看 example.html 及 example.js  
   
 ### 协议 ###   
 GPLv3  
   
-
-
   [1]: https://jjling2011.github.io/card.js/src/example.html
   [2]: https://raw.githubusercontent.com/jjling2011/card.js/master/readme/example_html.png
