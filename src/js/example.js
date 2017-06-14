@@ -50,8 +50,8 @@ web.o.card_ev = function (container_id) {
                     '<input type="button" id="' + this.el('stop') + '" value="停止" class="card-btn">' +
                     '<div class="card-text" id="' + this.el('content_time') + '"></div>' +
                     '共享数据可被各实例读取/修改：<br>'+
-                    '<input type="button" id="' + this.el('save') + '" value="生成共享数据" class="card-btn">' +
-                    '<input type="button" id="' + this.el('load') + '" value="读取共享数据" class="card-btn">' +
+                    '<input type="button" id="' + this.el('cache') + '" value="生成共享数据" class="card-btn">' +
+                    '<input type="button" id="' + this.el('restore') + '" value="读取共享数据" class="card-btn">' +
                     '<div class="card-text" id="' + this.el('content_data') + '"></div>' +
                     '</div>';
         },
@@ -67,13 +67,13 @@ web.o.card_ev = function (container_id) {
                 'stop': function () {
                     this.f.clear_timer();
                 },
-                'save': function () {
+                'cache': function () {
                     var content = cardjs.lib.rand(16);
-                    this.f.save(content);
+                    this.f.cache(content);
                     this.el('content_data', true).innerHTML = '共享数据：' + content;
                 },
-                'load': function () {
-                    var content = this.f.load();
+                'restore': function () {
+                    var content = this.f.restore();
                     this.el('content_data', true).innerHTML = '读取数据：' + content;
                 }
             });
@@ -81,8 +81,8 @@ web.o.card_ev = function (container_id) {
         add_event: function () {
             this.f.on('click', 'show_time');
             this.f.on('click', 'stop');
-            this.f.on('click', 'save');
-            this.f.on('click', 'load');
+            this.f.on('click', 'cache');
+            this.f.on('click', 'restore');
         }
     }));
 };

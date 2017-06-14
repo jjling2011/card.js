@@ -89,24 +89,24 @@ web.o.cdb = function (cid) {
         settings: {header: 'card_db', key: 'null', add_event: true},
         gen_html: function () {
             var html = '';
-            html += '<input type="button" value="save" id="' + this.el('save') + '">';
-            html += '<input type="button" value="load" id="' + this.el('load') + '">';
+            html += '<input type="button" value="cache" id="' + this.el('cache') + '">';
+            html += '<input type="button" value="restore" id="' + this.el('restore') + '">';
             return html;
         },
         gen_ev_handler: function () {
             return ({
-                'save':function(){
+                'cache':function(){
                     console.log('set data.');
-                    this.f.save('hello!');
+                    this.f.cache('hello!');
                 },
-                'load':function(){
-                    console.log('got data:',this.f.load());
+                'restore':function(){
+                    console.log('got data:',this.f.restore());
                 }
             });
         },
         add_event: function () {
-            this.f.on('click','save');
-            this.f.on('click','load');
+            this.f.on('click','cache');
+            this.f.on('click','restore');
         }
     }));
 };

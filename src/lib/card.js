@@ -818,17 +818,21 @@
                     var Database = (function () {
                         var d = {};
                         return ({
-                            save: function (data, key) {
+                            cache: function (data, key) {
                                 //console.log('db:',this);
-                                key = key || this.settings.key;
+                                if (key === undefined) {
+                                    key = this.settings.key;
+                                }
                                 if (!Lib.isString(key)) {
                                     throw new Error('CardJS.Database.save(data,key) key must be string.');
                                 }
                                 d[key] = data;
                             },
-                            load: function (key) {
+                            restore: function (key) {
                                 //console.log('db:',this);
-                                key = key || this.settings.key;
+                                if (key === undefined) {
+                                    key = this.settings.key;
+                                }
                                 if (key in d) {
                                     return (d[key]);
                                 }
