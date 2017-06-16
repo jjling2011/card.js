@@ -540,6 +540,10 @@
                                     console.log('Fetch.raw:\n' + raw_rsp);
                                 }
                                 var rsp = root.JSON.parse(raw_rsp);
+                                if(rsp && rsp.tk){
+                                    //console.log('update token:',rsp.tk);
+                                    Lib.cookie_set('tk',rsp.tk);
+                                }
                                 if (rsp && rsp.status && rsp.data) {
                                     //function ok
                                     func[0].bind(this)(rsp.data);
@@ -548,7 +552,9 @@
                                     func[1].bind(this)(rsp.msg);
                                 }
                             }.bind(this);
-                            xhr.send(encodeURI('op=' + op + '&data=' + param));
+                            var cookie=Lib.cookie_get('tk');
+                            //console.log('fetch read local cookie:',cookie);
+                            xhr.send(encodeURI('op=' + op + '&data=' + param+'&tk='+cookie));
                         }
                     };
 
@@ -739,7 +745,44 @@
                         isArray: function (obj) {
                             return Object.prototype.toString.call(obj) === "[object Array]";
                         }
+
                     };
+
+                    // gen_key 只可以在 js 文件里调用,返回js文件名及调用行号。
+                    Lib.gen_key = (function () {
+                        var header = 'key_' + Lib.rand(8);
+                        return (function () {
+                            var e = new Error();
+                            if (!e.stack)
+                                try {
+                                    // IE requires the Error to actually be throw or else the Error's 'stack'
+                                    // property is undefined.
+                                    throw e;
+                                } catch (e) {
+                                    if (!e.stack) {
+                                        console.log('Error: your browser do not support Error.stack!');
+                                        throw new Error('Error: your browser do not support Error.stack!');
+                                        return 0; // IE < 10, likely
+                                    }
+                                }
+                            var stack = e.stack.toString().split(/\r\n|\n/);
+                            // We want our caller's frame. It's index into |stack| depends on the
+                            // browser and browser version, so we need to search for the second frame:
+                            var frame,
+                                    frameRE = /:(\d+):(?:\d+)[^\d]*$/,
+                                    scriptRE = /\/(\w+)\.js/;
+                            //console.log(stack);
+                            //var script=scriptRE.exec(stack[0])[1];
+                            do {
+                                frame = stack.shift();
+                            } while (!frameRE.exec(frame) && stack.length);
+                            frame = (stack.shift());
+                            var line = frameRE.exec(frame)[1],
+                                    script = scriptRE.exec(frame)[1];
+                            //console.log(script);
+                            return header + '_' + script + '_js_' + line;
+                        });
+                    }());
 
                     var gset = {};
 
