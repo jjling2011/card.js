@@ -540,9 +540,9 @@
                                     console.log('Fetch.raw:\n' + raw_rsp);
                                 }
                                 var rsp = root.JSON.parse(raw_rsp);
-                                if(rsp && rsp.tk){
+                                if (rsp && rsp.tk) {
                                     //console.log('update token:',rsp.tk);
-                                    Lib.cookie_set('tk',rsp.tk);
+                                    Lib.cookie_set('tk', rsp.tk);
                                 }
                                 if (rsp && rsp.status && rsp.data) {
                                     //function ok
@@ -552,9 +552,9 @@
                                     func[1].bind(this)(rsp.msg);
                                 }
                             }.bind(this);
-                            var cookie=Lib.cookie_get('tk');
+                            var cookie = Lib.cookie_get('tk');
                             //console.log('fetch read local cookie:',cookie);
-                            xhr.send(encodeURI('op=' + op + '&data=' + param+'&tk='+cookie));
+                            xhr.send(encodeURI('op=' + op + '&data=' + param + '&tk=' + cookie));
                         }
                     };
 
@@ -860,7 +860,52 @@
 
                     var Database = (function () {
                         var d = {};
+                        var e = {};
                         return ({
+                            cc_debug: function () {
+                                root.console.log('d:', d, ' e:', e);
+                            },
+                            cc_event: function (ev, status) {
+                                /**
+                                 * 如果 status=undefined 触发ev定义的事件
+                                 * 如果 status=true 添加 e[ev][this.settings.key]=true
+                                 * 如果 status=false 则 delete e[ev][this.settings.key]
+                                 * @param {string} ev 事件名
+                                 * @param {boolean} status 选项
+                                 * @returns {boolean} 操作成功/失败(通常用不上)
+                                 */
+                                var key = this.settings.key;
+
+                                if (status === false) {
+                                    if ((ev in e) && (key in e[ev])) {
+                                        delete e[ev][key];
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                                if (status === true) {
+                                    //console.log('call: cc_event(ev,key)', ev, key);
+                                    //console.log(e[ev]);
+                                    e[ev] = e[ev] || {};
+                                    e[ev][key] = true;
+                                    //root.console.log('after add key:', e);
+                                    return true;
+                                }
+                                if (status === undefined) {
+                                    if (ev in e) {
+                                        //console.log('call: cc_event(ev)', ev);
+                                        for (var k in e[ev]) {
+                                            if (k in d) {
+                                                d[k] = null;
+                                            }
+                                        }
+                                        //console.log('after delete cache:\n', ' d:', d, '\ne:', e);
+                                        return true;
+                                    }
+                                }
+                                throw new Error('Error: CardJS.Card.f.cc_cache(ev,status) ev:string status:true/false/undefined');
+                                return false;
+                            },
                             cache: function (data, key) {
                                 //console.log('db:',this);
                                 if (key === undefined) {
