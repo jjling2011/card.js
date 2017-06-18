@@ -49,10 +49,11 @@
          */
         this.cjsv = {
             timer: {},
-            evs: [],
+            evs: [], // this.f.on 绑定的事件
+            ev_handler: {}, // 事件响应函数
+            cevs: {}, // this.f.event 登记的事件
             ids: {},
             objs: {}, // cache
-            ev_handler: {},
             cid: container_id,
             //wrapid: gen_id('card_wrap', 0, 16),
             //wrap: null,
@@ -188,6 +189,11 @@
             call_method.bind(this)('remove_event', true);
             release_event.bind(this)();
             this.cjsv.event_flag = false;
+        }
+
+        for (var key in this.cjsv.cevs) {
+            this.f.event(key, false);
+            delete this.cjsv.cevs[key];
         }
 
         call_method.bind(this)('clean_up');
@@ -607,6 +613,12 @@
             // 不要问为什么！记住php是世界上最好的语言就对了！！
             return (root.decodeURIComponent(root.atob(text_base64)));
         },
+        load_html: function (id) {
+            return(root.document.getElementById(id).innerHTML);
+        },
+        get_elsbyname: function (name) {
+            return (root.document.getElementsByName(name));
+        },
         pad: function (n, width, leading_str) {
             var z = leading_str || '0';
             n = n + '';
@@ -685,7 +697,7 @@
             url = url.substring(url.lastIndexOf("/") + 1, url.length);
             return url;
         },
-        url_set_param: function (page, params) {
+        url_set_params: function (page, params) {
             params = params || {};
             //console.log('url_set_param:',page,params);
             if (root.history.pushState) {
@@ -760,6 +772,9 @@
             if (cval !== null) {
                 root.document.cookie = r;
             }
+        },
+        isBoolean: function (o) {
+            return (Lib.type(o) === 'Boolean');
         },
         isFunction: function (o) {
             return (Lib.type(o) === 'Function');
@@ -899,9 +914,9 @@
         return ({
             event: function (ev, func, status) {
                 /**
-                 * 如果 status=false 删除事件监听器。
-                 * 如果 func 是函数，添加到 f[ev].push({obj:this, func: func})
                  * 如果 status=false 则 delete e[ev][this.settings.key]
+                 * 如果 func 是函数，添加到 f[ev].push({obj:this, func: func})
+                 * 如果 func 是 false ，则清理 f[ev][this,*]
                  * @param {string} ev 事件名
                  * @param {function} func 监听函数
                  * @param {boolean} status 选项
@@ -911,34 +926,50 @@
                 var i, flag;
 
                 f[ev] = f[ev] || [];
-
-                if (status === false) {
-                    //delete func
-                    flag = false;
-                    //root.console.log('before delete:', f);
-                    for (i = f[ev].length - 1; i >= 0; i--) {
-                        if (f[ev][i].obj === this && f[ev][i].func === func) {
-                            //console.log('match:', i);
-                            f[ev].splice(i, 1);
-                            flag = true;
+                if (Lib.isFunction(func)) {
+                    if (status === false) {
+                        //delete func
+                        flag = false;
+                        root.console.log('before delete:', f);
+                        for (i = f[ev].length - 1; i >= 0; i--) {
+                            if (f[ev][i].obj === this && f[ev][i].func === func) {
+                                //console.log('match:', i);
+                                f[ev].splice(i, 1);
+                                flag = true;
+                            }
                         }
+                        root.console.log('after delete func:', f);
+                        return flag;
                     }
 
-                    //root.console.log('after delete:', f);
-                    return flag;
-                }
-                if (func && Lib.isFunction(func)) {
-                    // regist func
                     for (i = 0; i < f[ev].length; i++) {
                         if (f[ev][i].obj === this && f[ev][i].func === func) {
                             root.console.log('Function has already registed!', f);
                             return false;
                         }
                     }
+
+                    this.cjsv.cevs[ev] = true; // 记录下事件名,在destroy时自动清理.
                     f[ev].push({obj: this, func: func});
                     //root.console.log('after regist new function:', f);
                     return true;
                 }
+
+                if (func === false) {
+                    //delete ev listener
+                    flag = false;
+                    //root.console.log('before delete:', f);
+                    for (i = f[ev].length - 1; i >= 0; i--) {
+                        if (f[ev][i].obj === this) {
+                            //console.log('match:', i);
+                            f[ev].splice(i, 1);
+                            flag = true;
+                        }
+                    }
+                    //root.console.log('after delete ev:', f);
+                    return flag;
+                }
+
                 // trigger event
                 flag = true;
                 var el;
@@ -946,7 +977,7 @@
                     el = f[ev][i];
                     if (el.obj && el.obj.self) {
                         //root.console.log('call func:',el);
-                        el.func.bind(el.obj)();
+                        el.func.bind(el.obj)(func);
                     } else {
                         f[ev].splice(i, 1);
                         console.log('Error: object not exist， event listener deleted.');
@@ -959,7 +990,7 @@
             cc_debug: function () {
                 root.console.log('d:', d, ' e:', e);
             },
-            cc_event: function (ev, status) {
+            clear_cache: function (ev, status) {
                 /**
                  * 如果 status=undefined 触发ev定义的事件
                  * 如果 status=true 添加 e[ev][this.settings.key]=true
@@ -981,7 +1012,7 @@
                 }
                 // add event[key]
                 if (status === true) {
-                    //console.log('call: cc_event(ev,key)', ev, key);
+                    //console.log('call: clear_cache(ev,key)', ev, key);
                     //console.log(e[ev]);
                     e[ev][this.settings.key] = true;
                     //root.console.log('after add key:', e);
@@ -990,7 +1021,7 @@
                 //trigger event
                 if (status === undefined) {
                     if (ev in e) {
-                        //console.log('call: cc_event(ev)', ev);
+                        //console.log('call: clear_cache(ev)', ev);
                         for (var k in e[ev]) {
                             if (k in d) {
                                 d[k] = null;
