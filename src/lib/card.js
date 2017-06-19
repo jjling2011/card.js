@@ -21,6 +21,34 @@
  })('cardjs', this, */
 (function (root, module_name) {
 
+    var Package = function (data_key) {
+
+        this.settings = {
+            key: data_key || 'pkgshare'
+        };
+
+        this.cjsv = {
+            // 登记 this.f.event()的时候记录下事件名.close的时候销毁事件.
+            cevs: {}
+        };
+
+        var key;
+        
+        this.f={};
+
+        for (key in Database) {
+            this.f[key] = Database[key].bind(this);
+        }
+    };
+
+    Package.prototype.destroy = function () {
+        call_method.bind(this)('clean_up');
+        for (var key in this.cjsv.cevs) {
+            this.f.event(key, false);
+            delete this.cjsv.cevs[key];
+        }
+    };
+
     var Card = function (container_id) {
 
         var key;
@@ -1061,6 +1089,7 @@
     }());
 
     var exports = {
+        package: Package,
         card: Card,
         //page: Page,
         //panel: Panel,
