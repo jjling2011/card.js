@@ -3,23 +3,22 @@
 
 /* global define */
 
+(function (name, context, definition) {
+    // copy from https://github.com/ded/qwery/blob/master/src/qwery.js
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = definition();
+    } else if (typeof define === 'function' && define.amd) {
+        define(function () {
+            return definition();
+        });
+    } else {
+        context[name] = definition();
+    }
+})('cardjs', this, function () {
 
-"use strict";
-
-/*
- (function (name, context, definition) {
- // copy from https://github.com/ded/qwery/blob/master/src/qwery.js
- if (typeof module !== 'undefined' && module.exports) {
- module.exports = definition(context);
- } else if (typeof define === 'function' && define.amd) {
- define(function () {
- return definition(context);
- });
- } else {
- context[name] = definition(context);
- }
- })('cardjs', this, */
-(function (root, module_name) {
+    "use strict";
+    
+    var root = window;
 
     var Package = function (params) {
 
@@ -727,8 +726,17 @@
         get_DOM_offset: function (el) {
             var left, top, rect;
             rect = el.getBoundingClientRect();
-            left = rect.left + root.scrollX + rect.width;
-            top = rect.top + root.scrollY + rect.height;
+            var sx = (root.pageXOffset !== undefined)
+                    ? root.pageXOffset
+                    : (root.document.documentElement || root.document.body.parentNode || root.document.body).scrollLeft;
+
+            var sy = (root.pageYOffset !== undefined)
+                    ? root.pageYOffset
+                    : (root.document.documentElement || root.document.body.parentNode || root.document.body).scrollTop;
+
+            left = rect.left + sx + rect.width;
+            top = rect.top + sy + rect.height;
+            //console.log('rect:', rect, ' root.sx/sy:', root.scrollX, root.scrollY, ' left/top:', left, top);
             el = null;
             rect = null;
             return {
@@ -770,24 +778,19 @@
             return Object.prototype.toString.call(obj).slice(8, -1);
         },
         getYMD: function (date_str) {
-            var myd, y, m, d;
-            if (date_str) {
-                myd = new Date(date_str);
-            } else {
-                myd = new Date();
+            //var date_str = "2011-08-03 09:15:11"; 
+            var d = date_str.split(" ");
+            if (d && d[0]) {
+                return d[0];
             }
-            y = myd.getFullYear();
-            m = ('0' + (myd.getMonth() + 1)).slice(-2);
-            d = ('0' + myd.getDate()).slice(-2);
-            myd = null;
-            return ([y, m, d].join('-'));
+            return 'none';
         },
-        getTime: function (d) {
-            var mydate = new Date(d), str;
-            str = ('0' + mydate.getHours()).slice(-2) + ':'
-                    + ('0' + mydate.getMinutes()).slice(-2);
-            mydate = null;
-            return (str);
+        getTime: function (date_str) {
+            var d = date_str.split(" ");
+            if (d && d[1]) {
+                return d[1];
+            }
+            return 'none';
         },
         cookie_set: function (name, value, expires) {
             //默认一年,expires默认一个月
@@ -1117,8 +1120,7 @@
         create: Create
     };
 
-    root[module_name] = exports;
+    //root[module_name] = exports;
 
-    //return (exports);
-}(window, 'cardjs'));
-// );
+    return (exports);
+});
