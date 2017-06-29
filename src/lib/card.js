@@ -17,23 +17,16 @@
 })('cardjs', this, function () {
 
     "use strict";
-    
+
     var root = window;
 
     var Package = function (params) {
-
-        var key;
-        var skip = {'key': true};
-
-        for (key  in params) {
-            if (!(key in skip)) {
-                this[key] = params[key];
-            }
-        }
-
+       
         this.settings = {
-            key: params.key || 'pkgshare'
+            key: 'pkgshare'
         };
+        
+        Lib.expand(this.settings,params.settings);
 
         this.cjsv = {
             // 登记 this.f.event()的时候记录下事件名.close的时候销毁事件.
@@ -42,8 +35,8 @@
 
         this.f = {};
 
-        for (key in Database) {
-            this.f[key] = Database[key].bind(this);
+        for (var k in Database) {
+            this.f[k] = Database[k].bind(this);
         }
 
         this.self = true;
@@ -272,6 +265,7 @@
 
     // 我真的不知道为什么我喜欢给他设个根本用不上的名字 ...
     Card.prototype.name = 'CARD';
+
     Card.prototype.gen_html = function () {
         throw new Error('Card.prototype.gen_html(): Please rewrite this function.');
         return '';
@@ -349,10 +343,21 @@
         return html;
     };
 
+    function get_obj(str) {
+        var obj = root;
+        var s = str.split('.');
+        for (var i = 0; i < s.length && obj !== undefined; i++) {
+            obj = obj[s[i]];
+        }
+        return obj;
+    }
+
     Page.prototype.after_add_event = function () {
         this.clean_up();
+        //console.log('page.this', this);
+
         for (var i = 0; i < this.cards.length; i++) {
-            this.children.push(this.cards[i](this.el(i)).show());
+            this.children.push(get_obj(this.cards[i])(this.el(i)).show());
         }
     };
 
@@ -646,17 +651,19 @@
             }
             o = null;
         },
-        utf8_to_base64: function (text_utf8) {
+        encode_utf8: function (text_utf8) {
             //对应 php decode:
             // $txt_utf8 = urldecode(base64_decode($txt_b64));
-            return root.btoa(root.encodeURIComponent(text_utf8));
+            //return root.btoa(root.encodeURIComponent(text_utf8));
+            return root.encodeURIComponent(text_utf8);
         },
-        base64_to_utf8: function (text_base64) {
+        decode_utf8: function (text_base64) {
             // 对应 php encode: 
             // $txt_b64 =base64_encode(rawurlencode($txt_utf8));
             // **** 注意是带raw三个字母 **** 
             // 不要问为什么！记住php是世界上最好的语言就对了！！
-            return (root.decodeURIComponent(root.atob(text_base64)));
+            //return (root.decodeURIComponent(root.atob(text_base64)));
+            return (root.decodeURIComponent(text_base64));
         },
         load_html: function (id) {
             return(root.document.getElementById(id).innerHTML);
@@ -857,7 +864,7 @@
             }
         var stack = e.stack.toString().split(/\r\n|\n/),
                 frame,
-                frameRE = /:(\d+):(?:\d+)[^\d]*$/,
+                frameRE = /:(\d+):(?:(\d+))[^\d]*$/,
                 scriptRE = /\/(\w+)\.js/;
 
         e = null;
@@ -868,12 +875,20 @@
 
         frame = (stack.shift());
 
-        var line = frameRE.exec(frame)[1],
+        var m = frameRE.exec(frame);
+
+        var line = m[1],
+                char = m[2],
                 script = scriptRE.exec(frame)[1];
         frameRE = null;
         scriptRE = null;
-        //console.log(script);
-        return 'key_' + script + '_js_' + line;
+        m = null;
+
+        var k = 'key_' + script + '_' + line + '_' + char;
+
+        //var k='key_' + script + '_' + line ;
+        //console.log(k);
+        return k;
     });
 
     var gset = {};
@@ -894,6 +909,21 @@
         SubType.prototype = prototype;
     }
 
+    function bind_params(o, p) {
+        var skip = {'cards': null, 'type': null, 'settings': null, 'pages': null, 'style': null};
+
+        for (var key in p) {
+            if (!(key in skip)) {
+                if (Lib.isFunction(p[key])) {
+                    o[key] = p[key].bind(o);
+                } else {
+                    o[key] = p[key];
+                }
+            }
+        }
+    }
+
+
     function Create(params) {
 
         if (!Lib.isObject(params)) {
@@ -901,8 +931,22 @@
         }
 
         if (!('cid' in params)) {
-            throw new Error('CardJS.Create(params): params must have key cid');
+            //throw new Error('CardJS.Create(params): params must have key cid');
+            if(params.type==='package'){
+                var o=new Package(params);
+                bind_params(o,params);
+                if(Lib.isFunction(o.init)){
+                    o.init.bind(o)();
+                }
+                return o;
+            }
+            return function (cid) {
+                params.cid = cid;
+                //console.log('params:', p);
+                return Create(params);
+            };
         }
+
         var o = null;
         var style = undefined;
         var cid = params['cid'];
@@ -935,26 +979,14 @@
             Lib.expand(o.settings, params['settings']);
         }
 
-        var skip = {'cards': null, 'type': null, 'settings': null, 'pages': null, 'style': null};
+        bind_params(o, params);
 
-        for (var key in params) {
-            if (!(key in skip)) {
-                if (Lib.isFunction(params[key])) {
-                    o[key] = params[key].bind(o);
-                } else {
-                    o[key] = params[key];
-                }
-            }
-        }
-
-        cid = null;
         style = null;
-        skip = null;
         params = null;
-
 
         return o;
     }
+
 
     var Database = (function () {
         var d = {};
@@ -1110,7 +1142,6 @@
     }());
 
     var exports = {
-        package: Package,
         card: Card,
         //page: Page,
         //panel: Panel,

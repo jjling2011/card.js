@@ -37,76 +37,68 @@ web.o.card = function (cid) {
 };
 
 // 创建一个可以响应事件及共享数据的Card对象。
-web.o.card_ev = function (container_id) {
-
-    return (cardjs.create({
-        cid: container_id,
-        settings: {header: 'tcard', add_event: true},
-        gen_html: function () {
-            //console.log('gen_html:',this);
-            return '<div class="card-div" style="color:#999;font-size:14px">' +
-                    '各实例事件相互隔离：<br>'+
-                    '<input type="button" id="' + this.el('show_time') + '" value="显示时间" class="card-btn">' +
-                    '<input type="button" id="' + this.el('stop') + '" value="停止" class="card-btn">' +
-                    '<div class="card-text" id="' + this.el('content_time') + '"></div>' +
-                    '共享数据可被各实例读取/修改：<br>'+
-                    '<input type="button" id="' + this.el('cache') + '" value="生成共享数据" class="card-btn">' +
-                    '<input type="button" id="' + this.el('restore') + '" value="读取共享数据" class="card-btn">' +
-                    '<div class="card-text" id="' + this.el('content_data') + '"></div>' +
-                    '</div>';
-        },
-        update: function () {
-            this.el('content_time', true).innerHTML = (new Date()).toLocaleString();
-            window.console.log(this.el('content_time') + ':' + this.el('content_time', true).innerHTML);
-        },
-        gen_ev_handler: function () {
-            return ({
-                'show_time': function () {
-                    this.f.set_timer(this.update, 1000);
-                },
-                'stop': function () {
-                    this.f.clear_timer();
-                },
-                'cache': function () {
-                    var content = cardjs.lib.rand(16);
-                    this.f.cache(content);
-                    this.el('content_data', true).innerHTML = '共享数据：' + content;
-                },
-                'restore': function () {
-                    var content = this.f.restore();
-                    this.el('content_data', true).innerHTML = '读取数据：' + content;
-                }
-            });
-        },
-        add_event: function () {
-            this.f.on('click', 'show_time');
-            this.f.on('click', 'stop');
-            this.f.on('click', 'cache');
-            this.f.on('click', 'restore');
-        }
-    }));
-};
+web.o.card_ev = cardjs.create({
+    settings: {header: 'tcard', add_event: true},
+    gen_html: function () {
+        //console.log('gen_html:',this);
+        return '<div class="card-div" style="color:#999;font-size:14px">' +
+                '各实例事件相互隔离：<br>' +
+                '<input type="button" id="' + this.el('show_time') + '" value="显示时间" class="card-btn">' +
+                '<input type="button" id="' + this.el('stop') + '" value="停止" class="card-btn">' +
+                '<div class="card-text" id="' + this.el('content_time') + '"></div>' +
+                '共享数据可被各实例读取/修改：<br>' +
+                '<input type="button" id="' + this.el('cache') + '" value="生成共享数据" class="card-btn">' +
+                '<input type="button" id="' + this.el('restore') + '" value="读取共享数据" class="card-btn">' +
+                '<div class="card-text" id="' + this.el('content_data') + '"></div>' +
+                '</div>';
+    },
+    update: function () {
+        this.el('content_time', true).innerHTML = (new Date()).toLocaleString();
+        window.console.log(this.el('content_time') + ':' + this.el('content_time', true).innerHTML);
+    },
+    gen_ev_handler: function () {
+        return ({
+            'show_time': function () {
+                this.f.set_timer(this.update, 1000);
+            },
+            'stop': function () {
+                this.f.clear_timer();
+            },
+            'cache': function () {
+                var content = cardjs.lib.rand(16);
+                this.f.cache(content);
+                this.el('content_data', true).innerHTML = '共享数据：' + content;
+            },
+            'restore': function () {
+                var content = this.f.restore();
+                this.el('content_data', true).innerHTML = '读取数据：' + content;
+            }
+        });
+    },
+    add_event: function () {
+        this.f.on('click', 'show_time');
+        this.f.on('click', 'stop');
+        this.f.on('click', 'cache');
+        this.f.on('click', 'restore');
+    }
+});
 
 // 多个卡合并起来动态切换。
-web.o.panel = function (cid) {
+web.o.panel = cardjs.create({
+    type: 'panel',
+    pages: {
+        '动态获取数据': ['web.o.card_fetch'],
+        '多卡片混合': ['web.o.card', 'web.o.card_ev', 'web.o.card_fetch']
+    },
+    style: {
+        'tags': 'tags',
+        'tag_normal': 'tag-normal',
+        'tag_active': 'tag-active',
+        'page': 'page',
+        'card': 'card'
+    }
+});
 
-    return (cardjs.create({
-        type: 'panel',
-        cid: cid,
-        pages: {
-            '动态获取数据': [web.o.card_fetch],
-            '多卡片混合': [web.o.card, web.o.card_ev, web.o.card_fetch]
-        },
-        style: {
-            'tags': 'tags',
-            'tag_normal': 'tag-normal',
-            'tag_active': 'tag-active',
-            'page': 'page',
-            'card': 'card'
-        }
-    }));
-
-};
 
 web.o.card_fetch = function (container_id) {
 
