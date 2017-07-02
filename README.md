@@ -1,9 +1,8 @@
-card.js用于编写单面应用(SPA)，非常简陋的js库。  
-前端代码： `src/lib/card.js`  
-后端代码： `src/serv.php`     
-使用方法详见示例 `example.html` 及 `example.js`  
+card.js用于编写单面应用(SPA)，非常简陋的js库。 
   
-### 实例 ###  
+[wiki页面](https://github.com/jjling2011/card.js/wiki)  
+  
+### 演示 ###  
 [card.js 演示页面][1]  
 [siplog 通过card.js构建的单面博客](https://github.com/jjling2011/siplog)  
 *建议使用chrome浏览器*  

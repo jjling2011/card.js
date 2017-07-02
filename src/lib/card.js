@@ -21,12 +21,12 @@
     var root = window;
 
     var Package = function (params) {
-       
+
         this.settings = {
             key: 'pkgshare'
         };
-        
-        Lib.expand(this.settings,params.settings);
+
+        Lib.expand(this.settings, params.settings);
 
         this.cjsv = {
             // 登记 this.f.event()的时候记录下事件名.close的时候销毁事件.
@@ -607,7 +607,7 @@
                 }
                 var rsp = root.JSON.parse(raw_rsp);
                 if (rsp && rsp.tk) {
-                    //console.log('update token:',rsp.tk);
+                    //console.log('update token:', rsp.tk);
                     Lib.cookie_set('tk', rsp.tk);
                 }
                 if (rsp && rsp.status && rsp.data) {
@@ -619,10 +619,9 @@
                 }
                 func = null;
             }.bind(this);
-            var cookie = Lib.cookie_get('tk');
-            //console.log('fetch read local cookie:',cookie);
-            xhr.send(encodeURI('op=' + op + '&data=' + param + '&tk=' + cookie));
-            cookie = null;
+
+            xhr.send(encodeURI('tk=' + Lib.cookie_get('tk') + '&op=' + op + '&data=' + param));
+
         }
     };
 
@@ -932,10 +931,10 @@
 
         if (!('cid' in params)) {
             //throw new Error('CardJS.Create(params): params must have key cid');
-            if(params.type==='package'){
-                var o=new Package(params);
-                bind_params(o,params);
-                if(Lib.isFunction(o.init)){
+            if (params.type === 'package') {
+                var o = new Package(params);
+                bind_params(o, params);
+                if (Lib.isFunction(o.init)) {
                     o.init.bind(o)();
                 }
                 return o;
