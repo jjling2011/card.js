@@ -31,5 +31,5 @@ cardjs.create 简化Card/Page/Panel创建过程的函数。
 ### 协议 ###   
 GPLv3  
   
-  [1]: https://jjling2011.github.io/card.js/src/example.html
+  [1]: https://jjling2011.github.io/card.js/example/example.html
   [2]: https://raw.githubusercontent.com/jjling2011/card.js/master/readme/example_html.png

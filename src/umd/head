@@ -1,0 +1,20 @@
+// https://github.com/jjling2011/card.js
+// GPL-3.0
+
+/* global define */
+
+(function (name, context, definition) {
+    // copy from https://github.com/ded/qwery/blob/master/src/qwery.js
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = definition();
+    } else if (typeof define === 'function' && define.amd) {
+        define(function () {
+            return definition();
+        });
+    } else {
+        context[name] = definition();
+    }
+})('cardjs', this, function () {
+
+    "use strict";
+
