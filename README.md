@@ -18,6 +18,12 @@ card.js的设计目的就是简化这些工作。
 它将网页每个部分看成一个“卡片”，通过调用card.js里的Card对象创建及绑定事件。  
 多个Card集合成一个Page，然后通过Panel实现多个Page之间动态切换。  
 （Panel可以类比看成浏览器的标签栏）  
+  
+### 用法 ###
+复制 `dist/card.js` 到网页工程的相应目录   
+以 `<script type="text/javascript" src="lib/card.js"></script>` 的方式引入此库  
+建议先看`publish.sh`了解各部分的组合顺序  
+具体用法参看演示页面中的代码   
     
 ### card.js导出对象 ###  
 card.js默认导出 CardJS，包含以下对象  
