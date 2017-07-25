@@ -24,6 +24,13 @@ var Package = function (params) {
     }
 
     bind_params(this, params, ['type']);
+
+    this.init();
+
+};
+
+Package.prototype.init = function () {
+    // please redefine this function
 };
 
 Package.prototype.destroy = function () {

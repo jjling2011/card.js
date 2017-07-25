@@ -1,27 +1,27 @@
-/* global root, gvars, Cache, Lib, call_method, release_event, funcs, bind_params */
+/* global root, gvars, Cache, Lib, call_method, funcs, bind_params */
 
 // card对象
 
 var Card = function (params) {
-    
+
     this.construct(params);
     this.init(params);
-    
+
 };
 
-/**
+/*
  * 每个派生对象都需要重写此方法
  * 里面是该对象特有的初始化代码
  */
-Card.prototype.init=function(params){
+Card.prototype.init = function (params) {
     bind_params(this, params);
 };
 
 Card.prototype.construct = function (params) {
 
-    var container_id = params.cid;
+    var cid = params.cid;
 
-    this.self = root.document.getElementById(container_id);
+    this.self = root.document.getElementById(cid);
 
     this.settings = {
         // 服务页面url
@@ -46,8 +46,7 @@ Card.prototype.construct = function (params) {
         cevs: {}, // this.f.event 登记的事件
         ids: {},
         objs: {}, // cache
-        cid: container_id,
-        rendered: false,
+        cid: cid,
         event_flag: false
     };
 
@@ -58,7 +57,7 @@ Card.prototype.construct = function (params) {
     this.f = {};
 
     var key;
-    
+
     for (key in funcs) {
         this.f[key] = funcs[key].bind(this);
     }
@@ -111,28 +110,56 @@ Card.prototype.el = function (key, obj) {
     return dom;
 };
 
-Card.prototype.show = function () {
-    if (!this.cjsv.rendered) {
-        return this.refresh();
-    }
-    return this;
-};
-
-Card.prototype.refresh = function () {
-    //render.bind(this)();
+Card.prototype.__clean = function (everything) {
+    var key;
     if (this.cjsv.event_flag) {
         call_method.bind(this)('remove_event', true);
-        release_event.bind(this)();
+
+        for (key in this.cjsv.timer) {
+            this.f.clear_timer(key);
+        }
+
+        if (this.cjsv.evs.length > 0) {
+            //log('before release_event:', this.cjsv.evs);
+            var e = this.cjsv.evs;
+            for (key in e) {
+                e[key] && this.f.off(e[key][0], e[key][1], e[key][2]);
+                delete e[key];
+            }
+            //log('after release_event:', this.cjsv.evs);
+            e = null;
+
+        }
+        this.cjsv.evs = [];
+        for (key in this.cjsv.ev_handler) {
+            delete this.cjsv.ev_handler[key];
+        }
+
         this.cjsv.event_flag = false;
     }
 
-    for (var key in this.cjsv.ids) {
+    for (key in this.cjsv.cevs) {
+        this.f.event(key, false);
+        delete this.cjsv.cevs[key];
+    }
+    
+    if (everything) {
+        call_method.bind(this)('clean_up');
+    }
+    
+    //this.cjsv.timer={};
+    for (key in this.cjsv.ids) {
         if (this.cjsv.objs[key]) {
-            this.cjsv.objs[key] = null;
+            //this.cjsv.objs[key] = null;
             delete this.cjsv.objs[key];
         }
         delete this.cjsv.ids[key];
     }
+};
+
+Card.prototype.show = function () {
+
+    this.__clean(false);
 
     call_method.bind(this)('data_parser');
     this.self.innerHTML = this.gen_html();
@@ -157,7 +184,6 @@ Card.prototype.refresh = function () {
     }
     call_method.bind(this)('after_add_event');
 
-    this.cjsv.rendered = true;
     return this;
 };
 
@@ -171,26 +197,7 @@ Card.prototype.refresh = function () {
  */
 Card.prototype.destroy = function () {
 
-    if (this.cjsv.event_flag) {
-        call_method.bind(this)('remove_event', true);
-        release_event.bind(this)();
-        this.cjsv.event_flag = false;
-    }
-
-    for (var key in this.cjsv.cevs) {
-        this.f.event(key, false);
-        delete this.cjsv.cevs[key];
-    }
-
-    call_method.bind(this)('clean_up');
-    //this.cjsv.timer={};
-    for (var key in this.cjsv.ids) {
-        if (this.cjsv.objs[key]) {
-            //this.cjsv.objs[key] = null;
-            delete this.cjsv.objs[key];
-        }
-        delete this.cjsv.ids[key];
-    }
+    this.__clean(true);
 
     for (var key in this.f) {
         delete this.f[key];

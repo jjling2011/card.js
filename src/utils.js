@@ -72,32 +72,3 @@ function bind_params(obj, params, skip) {
         }
     }
 }
-
-// 只有card对象使用，以后移进card对象中
-// 自动释放通过 card.f.on 绑定的事件。后面的 remove_event 是手动。
-function release_event() {
-    var key;
-
-    for (var key in this.cjsv.timer) {
-        this.f.clear_timer(key);
-    }
-
-    if (this.cjsv.evs.length > 0) {
-        //log('before release_event:', this.cjsv.evs);
-        var e = this.cjsv.evs;
-        for (key in e) {
-            e[key] && this.f.off(e[key][0], e[key][1], e[key][2]);
-            delete e[key];
-        }
-        //log('after release_event:', this.cjsv.evs);
-        e = null;
-
-    }
-    this.cjsv.evs = [];
-    for (key in this.cjsv.ev_handler) {
-        delete this.cjsv.ev_handler[key];
-    }
-    key = null;
-}
-
-
