@@ -1,8 +1,9 @@
 /* global gvars, Lib, funcs, Cache, call_method */
 
 var Package = function (params) {
-
-    this.self = true; // 兼容destroy()
+    
+    // 配合this.f.fetch()
+    this.self = true; 
 
     this.settings = {
         key: 'pkgshare'

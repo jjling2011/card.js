@@ -1,44 +1,33 @@
 /* global root, gvars, Cache, Lib, call_method, funcs, bind_params */
 
-// card对象
+// card对象的你对象
 
-var Card = function (params) {
-
-    this.construct(params);
-    this.init(params);
-
-};
-
-/*
- * 每个派生对象都需要重写此方法
- * 里面是该对象特有的初始化代码
- */
-Card.prototype.init = function (params) {
-    bind_params(this, params);
-};
-
-Card.prototype.construct = function (params) {
+var Paper = function (params) {
 
     var cid = params.cid;
 
     this.self = root.document.getElementById(cid);
 
     this.settings = {
+
         // 服务页面url
         server_page: 'serv.php',
+
+        // 缓存/共亨数据时使用的神奇字符串
         key: 'share',
-        // 自动生成的id以什么开头（方便调试）
+
+        // 自动生成的id首字符串（方便调试）
         header: 'card',
-        // 这个卡片是否需要绑定事件
+
+        // 是否需要绑定事件
         add_event: false,
+
         // 显示debug信息 
         verbose: false
     };
 
-    /* 
-     * CARD内部使用的变量，设个奇怪的名包装起来不用占太多变量名。
-     * fyi. cjsv = cardjs_variables
-     */
+    // CARD内部使用的变量，设个奇怪的名包装起来不用占太多变量名。
+    // fyi. cjsv = cardjs_variables
     this.cjsv = {
         timer: {},
         evs: [], // this.f.on 绑定的事件
@@ -49,8 +38,6 @@ Card.prototype.construct = function (params) {
         cid: cid,
         event_flag: false
     };
-
-
 
     Lib.expand(this.settings, gvars.settings, params.settings);
 
@@ -67,7 +54,11 @@ Card.prototype.construct = function (params) {
     }
 
     key = null;
+
 };
+
+// 我真的不知道为什么我喜欢给他设个根本用不上的名字 ...
+Paper.prototype.name = 'Paper';
 
 /**
  * 如果 key = undefine 返回当前id数量.
@@ -78,20 +69,27 @@ Card.prototype.construct = function (params) {
  * @param {boolean} obj
  * @returns {num/string/DOM object}
  */
-Card.prototype.el = function (key, obj) {
-    // Card.el() return current elements number;
+Paper.prototype.el = function (key, obj) {
+
     if (key === undefined) {
         return Object.keys(this.cjsv.ids).length;
     }
-    // Card.el('name') return { id: header_name_GlobalCounter_randstr, obj: documnet.getElementById(id)};
+
     if (obj === undefined) {
-        var id;
-        if (!(key in this.cjsv.ids)) {
-            id = this.settings.header + '_' + key + '_' + (gvars.cur_serial_id++) + '_' + Lib.rand(8);
-            this.cjsv.ids[key] = id;
-        } else {
-            id = this.cjsv.ids[key];
+
+        if (key in this.cjsv.ids) {
+            return (this.cjsv.ids[key]);
         }
+
+        var id = [
+            this.settings.header,
+            key,
+            (gvars.cur_serial_id)++,
+            Lib.rand(8)
+        ].join('_');
+
+        this.cjsv.ids[key] = id;
+
         return id;
     }
 
@@ -110,7 +108,7 @@ Card.prototype.el = function (key, obj) {
     return dom;
 };
 
-Card.prototype.__clean = function (everything) {
+Paper.prototype.__clean = function (everything) {
     var key;
     if (this.cjsv.event_flag) {
         call_method.bind(this)('remove_event', true);
@@ -142,11 +140,11 @@ Card.prototype.__clean = function (everything) {
         this.f.event(key, false);
         delete this.cjsv.cevs[key];
     }
-    
+
     if (everything) {
         call_method.bind(this)('clean_up');
     }
-    
+
     //this.cjsv.timer={};
     for (key in this.cjsv.ids) {
         if (this.cjsv.objs[key]) {
@@ -157,7 +155,7 @@ Card.prototype.__clean = function (everything) {
     }
 };
 
-Card.prototype.show = function () {
+Paper.prototype.show = function () {
 
     this.__clean(false);
 
@@ -168,7 +166,7 @@ Card.prototype.show = function () {
         var evh = call_method.bind(this)('gen_ev_handler', true);
 
         if (!(Lib.isArray(evh) || Lib.isObject(evh))) {
-            throw new Error('Card.cjsv.ev_handler should be [func1(), ... ] or { name1:func1(), ... }');
+            throw new Error('gen_ev_handler should return func_arr or func_dict.');
         }
 
         for (var key in evh) {
@@ -195,7 +193,7 @@ Card.prototype.show = function () {
  *   ... 你想清理的东西 ...
  * };
  */
-Card.prototype.destroy = function () {
+Paper.prototype.destroy = function () {
 
     this.__clean(true);
 
@@ -207,11 +205,8 @@ Card.prototype.destroy = function () {
     }
 };
 
-// 我真的不知道为什么我喜欢给他设个根本用不上的名字 ...
-Card.prototype.name = 'CARD';
-
-Card.prototype.gen_html = function () {
-    throw new Error('Card.prototype.gen_html(): Please rewrite this function.');
+Paper.prototype.gen_html = function () {
+    throw new Error('gen_html() must be redefined!');
     return '';
 };
 

@@ -1,28 +1,27 @@
-/* global Lib, Card, root */
+/* global Lib, root, Paper */
 
 //var Page = function (cid, cards, style) {
 var Page = function (params) {
     // style={'cards':css_name,'card':css_name};
-    var cid = params['cid'],
+    var cid = params.cid,
             cards = params.cards;
 
     if (!(Lib.isString(cid) && Lib.isArray(cards))) {
-        // log('cid:', cid, ' cards:', cards);
-        throw new Error('Error: new Page(cid,[ card1, card2, ...] )');
+        log('cid:', cid, ' cards:', cards);
+        throw new Error('Please check params!');
     }
-    Card.call(this, params);
 
-};
+    Paper.call(this, params);
 
-inherit(Page, Card);
-
-Page.prototype.init = function (params) {
     this.style = params.style || null;
     this.cards = params.cards;
     this.settings.header = 'page';
     this.children = [];
     bind_params(this, params, ['style', 'cards']);
+
 };
+
+inherit(Page, Paper);
 
 Page.prototype.name = 'PAGE';
 
@@ -39,8 +38,8 @@ Page.prototype.gen_html = function () {
 
     for (var i = 0; i < this.cards.length; i++) {
         html += '<div id="' + this.el(i) + '" ';
-        if (this.style && this.style['card']) {
-            html += ' class="' + this.style['card'] + '" ';
+        if (this.style && this.style.card) {
+            html += ' class="' + this.style.card + '" ';
         }
         html += '></div>';
     }
@@ -48,6 +47,7 @@ Page.prototype.gen_html = function () {
 };
 
 Page.prototype.after_add_event = function () {
+    
     this.clean_up();
     //log('page.this', this);
 
@@ -63,7 +63,6 @@ Page.prototype.after_add_event = function () {
     for (var i = 0; i < this.cards.length; i++) {
         var c = get_obj_from_string(this.cards[i]);
         var o = c(this.el(i));
-        // log('str', this.cards[i], ' c', c, ' o', o);
         this.children.push(o.show());
     }
 };

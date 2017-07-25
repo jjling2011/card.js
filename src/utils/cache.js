@@ -80,9 +80,9 @@ var Cache = (function () {
             el = null;
             return flag;
         },
-        cc_debug: function () {
-            log('d:', d, ' e:', e);
-        },
+//        cc_debug: function () {
+//            log('d:', d, ' e:', e);
+//        },
         clear_cache: function (ev, status) {
             /**
              * 如果 status=undefined 触发ev定义的事件
@@ -133,7 +133,7 @@ var Cache = (function () {
                 key = this.settings.key;
             }
             if (!Lib.isString(key)) {
-                throw new Error('CardJS.Cache.save(data,key) key must be string.');
+                throw new Error('this.f.cache(data,key) key should be string.');
             }
             d[key] = data;
             key = null;
