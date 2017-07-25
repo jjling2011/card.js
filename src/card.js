@@ -1,10 +1,25 @@
-/* global root, gset, Cache, Lib,token, call_method, release_event, funcs, cur_serial_id */
+/* global root, gvars, Cache, Lib, call_method, release_event, funcs, bind_params */
 
 // card对象
 
-var Card = function (container_id) {
+var Card = function (params) {
+    
+    this.construct(params);
+    this.init(params);
+    
+};
 
-    var key;
+/**
+ * 每个派生对象都需要重写此方法
+ * 里面是该对象特有的初始化代码
+ */
+Card.prototype.init=function(params){
+    bind_params(this, params);
+};
+
+Card.prototype.construct = function (params) {
+
+    var container_id = params.cid;
 
     this.self = root.document.getElementById(container_id);
 
@@ -19,10 +34,6 @@ var Card = function (container_id) {
         // 显示debug信息 
         verbose: false
     };
-
-    for (key in gset) {
-        this.settings[key] = gset[key];
-    }
 
     /* 
      * CARD内部使用的变量，设个奇怪的名包装起来不用占太多变量名。
@@ -40,8 +51,14 @@ var Card = function (container_id) {
         event_flag: false
     };
 
+
+
+    Lib.expand(this.settings, gvars.settings, params.settings);
+
     this.f = {};
 
+    var key;
+    
     for (key in funcs) {
         this.f[key] = funcs[key].bind(this);
     }
@@ -71,7 +88,7 @@ Card.prototype.el = function (key, obj) {
     if (obj === undefined) {
         var id;
         if (!(key in this.cjsv.ids)) {
-            id = this.settings.header + '_' + key + '_' + (cur_serial_id++) + '_' + Lib.rand(8);
+            id = this.settings.header + '_' + key + '_' + (gvars.cur_serial_id++) + '_' + Lib.rand(8);
             this.cjsv.ids[key] = id;
         } else {
             id = this.cjsv.ids[key];
@@ -104,10 +121,6 @@ Card.prototype.show = function () {
 Card.prototype.refresh = function () {
     //render.bind(this)();
     if (this.cjsv.event_flag) {
-        for (var key in this.cjsv.timer) {
-            this.f.clear_timer(key);
-        }
-
         call_method.bind(this)('remove_event', true);
         release_event.bind(this)();
         this.cjsv.event_flag = false;
@@ -148,50 +161,6 @@ Card.prototype.refresh = function () {
     return this;
 };
 
-// 关键方法，生成、绑定、解绑事件，生成、显示界面，数据处理。
-//function render() {
-//    if (this.cjsv.event_flag) {
-//        for (var key in this.cjsv.timer) {
-//            this.f.clear_timer(key);
-//        }
-//
-//        call_method.bind(this)('remove_event', true);
-//        release_event.bind(this)();
-//        this.cjsv.event_flag = false;
-//    }
-//
-//    for (var key in this.cjsv.ids) {
-//        if (this.cjsv.objs[key]) {
-//            this.cjsv.objs[key] = null;
-//            delete this.cjsv.objs[key];
-//        }
-//        delete this.cjsv.ids[key];
-//    }
-//
-//    call_method.bind(this)('data_parser');
-//    this.self.innerHTML = this.gen_html();
-//    call_method.bind(this)('before_add_event');
-//    if (this.el() > 0 && this.settings.add_event) {
-//        var evh = call_method.bind(this)('gen_ev_handler', true);
-//
-//        if (!(Lib.isArray(evh) || Lib.isObject(evh))) {
-//            throw new Error('Card.cjsv.ev_handler should be [func1(), ... ] or { name1:func1(), ... }');
-//        }
-//
-//        for (var key in evh) {
-//            this.cjsv.ev_handler[key] = evh[key].bind(this);
-//        }
-//
-//        evh = null;
-//
-//        if (!this.cjsv.event_flag) {
-//            call_method.bind(this)('add_event', true);
-//            this.cjsv.event_flag = true;
-//        }
-//    }
-//    call_method.bind(this)('after_add_event');
-//    return this;
-//}
 
 /* 
  * 销毁时进行一些清理工作。
@@ -201,10 +170,6 @@ Card.prototype.refresh = function () {
  * };
  */
 Card.prototype.destroy = function () {
-
-    for (var key in this.cjsv.timer) {
-        this.f.clear_timer(key);
-    }
 
     if (this.cjsv.event_flag) {
         call_method.bind(this)('remove_event', true);

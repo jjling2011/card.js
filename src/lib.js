@@ -6,15 +6,20 @@ var Lib = {
             throw new Error('Error: Lib.expand(obj1, obj2, ... )');
         }
         var o = arguments[0];
-        if (!(Lib.isObject(arguments[0]) || Lib.isArray(arguments[0]))) {
+        if (!(Lib.isObject(o))) {
             throw new Error('Error: Lib.expand() first param should be {} or []');
         }
+
         for (var i = 1; i < arguments.length; i++) {
-            for (var key in arguments[i]) {
-                o[key] = arguments[i][key];
+            var e = arguments[i];
+            if (Lib.isObject(e)) {
+                for (var key in e) {
+                    o[key] = e[key];
+                }
             }
         }
         o = null;
+        e = null;
     },
     encode_utf8: function (text_utf8) {
         //对应 php decode:

@@ -1,18 +1,14 @@
-/* global gset, Lib, funcs, Cache, call_method */
+/* global gvars, Lib, funcs, Cache, call_method */
 
 var Package = function (params) {
 
-    var key;
+    this.self = true; // 兼容destroy()
 
     this.settings = {
         key: 'pkgshare'
     };
 
-    for (key in gset) {
-        this.settings[key] = gset[key];
-    }
-
-    Lib.expand(this.settings, params.settings);
+    Lib.expand(this.settings, gvars.settings, params.settings);
 
     this.cjsv = {
         // 登记 this.f.event()的时候记录下事件名.close的时候销毁事件.
@@ -27,7 +23,7 @@ var Package = function (params) {
         this.f[k] = Cache[k].bind(this);
     }
 
-    this.self = true;
+    bind_params(this, params, ['type']);
 };
 
 Package.prototype.destroy = function () {

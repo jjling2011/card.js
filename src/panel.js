@@ -1,23 +1,36 @@
 
 /* global Card, Lib */
 
-var Panel = function (cid, pages, style) {
+var Panel = function (params) {
     //log('pages.type:', Lib.type(pages));
+    var cid = params.cid,
+            pages = params.pages,
+            style = params.style;
+
     if (!(Lib.isString(cid) && Lib.type(pages) === 'Object')) {
         log('cid:', cid, ' pages:', pages, ' style:', style);
         throw new Error('Error: new Panel(cid,{name1:[card1, card2, ...],name2:[card, ...], ... )');
     }
-    Card.call(this, cid);
+
+    Card.call(this, params);
+
+
+
+};
+
+inherit(Panel, Card);
+
+Panel.prototype.init = function (params) {
+    var pages = params.pages;
     // style={'tags':css,'tag_active':css,'tag_normal':css,'page':css,'card':css};
-    this.style = style || null;
+    this.style = params.style || null;
     this.tags = Object.keys(pages);
     this.pages = pages;
     this.child = null;
     this.settings.header = 'panel';
     this.settings.add_event = true;
+    bind_params(this, params, ['style', 'pages']);
 };
-
-inherit(Panel, Card);
 
 // I really don't know why I like to set a name.
 Panel.prototype.name = 'PANEL';
@@ -61,11 +74,14 @@ Panel.prototype.gen_ev_handler = function () {
                     this.el(id, true).setAttribute('class', this.style['tag_active']);
                 }
                 var page;
+                var p = {
+                    cid: this.el(this.tags.length),
+                    cards: this.pages[this.tags[id]]
+                };
                 if (this.style && this.style['card']) {
-                    page = new Page(this.el(this.tags.length), this.pages[this.tags[id]], {'card': this.style['card']});
-                } else {
-                    page = new Page(this.el(this.tags.length), this.pages[this.tags[id]]);
+                    p['style'] = {'card': this.style['card']};
                 }
+                page = new Page(p);
                 this.child = page.show();
                 page = null;
             });

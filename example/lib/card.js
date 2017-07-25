@@ -20,14 +20,18 @@
 
 /* global Lib */
 
-// 全局设置
-var gset = {};
+var gvars = {
 
-// 缓存fetch中的token用于身份认证.
-var token = null;
+    // 全局设置
+    settings: {},
 
-// 缓存自动生成的id序列号，保证id的唯一性
-var cur_serial_id = 0;
+    // 缓存fetch中的token用于身份认证.
+    token: null,
+
+    // 缓存自动生成的id序列号，保证id的唯一性
+    cur_serial_id: 0
+};
+
 
 var root = window;
 var log = root.console.log.bind(root.console);
@@ -38,7 +42,7 @@ var Set = function (params) {
         throw new Error('Error: CardJS.Lib.set( {key1:value1,key2:value2, ... });');
     }
     for (var key in params) {
-        gset[key] = params[key];
+        gvars.settings[key] = params[key];
     }
 };
 
@@ -68,10 +72,36 @@ function call_method(fn, debug) {
     return false;
 }
 
+function bind_params(obj, params, skip) {
+
+    var s = ['cid', 'type', 'settings'];
+
+    if (Lib.isArray(skip)) {
+        for (var i = 0; i < skip.length; i++) {
+            s.push(skip[i]);
+        }
+    }
+
+    for (var key in params) {
+        if (s.indexOf(key) < 0) {
+            if (Lib.isFunction(params[key])) {
+                obj[key] = params[key].bind(obj);
+            } else {
+                obj[key] = params[key];
+            }
+        }
+    }
+}
+
 // 只有card对象使用，以后移进card对象中
 // 自动释放通过 card.f.on 绑定的事件。后面的 remove_event 是手动。
 function release_event() {
     var key;
+
+    for (var key in this.cjsv.timer) {
+        this.f.clear_timer(key);
+    }
+
     if (this.cjsv.evs.length > 0) {
         //log('before release_event:', this.cjsv.evs);
         var e = this.cjsv.evs;
@@ -99,15 +129,20 @@ var Lib = {
             throw new Error('Error: Lib.expand(obj1, obj2, ... )');
         }
         var o = arguments[0];
-        if (!(Lib.isObject(arguments[0]) || Lib.isArray(arguments[0]))) {
+        if (!(Lib.isObject(o))) {
             throw new Error('Error: Lib.expand() first param should be {} or []');
         }
+
         for (var i = 1; i < arguments.length; i++) {
-            for (var key in arguments[i]) {
-                o[key] = arguments[i][key];
+            var e = arguments[i];
+            if (Lib.isObject(e)) {
+                for (var key in e) {
+                    o[key] = e[key];
+                }
             }
         }
         o = null;
+        e = null;
     },
     encode_utf8: function (text_utf8) {
         //对应 php decode:
@@ -347,7 +382,7 @@ Lib.gen_key = (function () {
     //var k='key_' + script + '_' + line ;
     //log(k);
     return k;
-});/* global root, token, Lib */
+});/* global root, gvars, Lib */
 
 // cardjs.card.f
 
@@ -514,8 +549,8 @@ var funcs = {
             var rsp = root.JSON.parse(raw_rsp);
             if (rsp && rsp.tk) {
                 //log('update token, rsp:',rsp);
-                token = rsp.tk;
-                Lib.cookie_set('tk', token);
+                gvars.token = rsp.tk;
+                Lib.cookie_set('tk', gvars.token);
             }
             if (rsp && rsp.status && rsp.data) {
                 //function ok
@@ -527,11 +562,11 @@ var funcs = {
             func = null;
         }.bind(this);
 
-        if (token === null) {
-            token = Lib.cookie_get('tk');
+        if (gvars.token === null) {
+            gvars.token = Lib.cookie_get('tk');
         }
         //log('op/data/tk',op,param,token);
-        xhr.send(encodeURI('tk=' + token + '&op=' + op + '&data=' + param));
+        xhr.send(encodeURI('tk=' + gvars.token + '&op=' + op + '&data=' + param));
     }
 };/* global root, Lib */
 
@@ -687,21 +722,17 @@ var Cache = (function () {
         }
     };
     return (r);
-}());/* global gset, Lib, funcs, Cache, call_method */
+}());/* global gvars, Lib, funcs, Cache, call_method */
 
 var Package = function (params) {
 
-    var key;
+    this.self = true; // 兼容destroy()
 
     this.settings = {
         key: 'pkgshare'
     };
 
-    for (key in gset) {
-        this.settings[key] = gset[key];
-    }
-
-    Lib.expand(this.settings, params.settings);
+    Lib.expand(this.settings, gvars.settings, params.settings);
 
     this.cjsv = {
         // 登记 this.f.event()的时候记录下事件名.close的时候销毁事件.
@@ -716,7 +747,7 @@ var Package = function (params) {
         this.f[k] = Cache[k].bind(this);
     }
 
-    this.self = true;
+    bind_params(this, params, ['type']);
 };
 
 Package.prototype.destroy = function () {
@@ -734,13 +765,28 @@ Package.prototype.destroy = function () {
         this[key] = null;
     }
     this.self = false;
-};/* global root, gset, Cache, Lib,token, call_method, release_event, funcs, cur_serial_id */
+};/* global root, gvars, Cache, Lib, call_method, release_event, funcs, bind_params */
 
 // card对象
 
-var Card = function (container_id) {
+var Card = function (params) {
+    
+    this.construct(params);
+    this.init(params);
+    
+};
 
-    var key;
+/**
+ * 每个派生对象都需要重写此方法
+ * 里面是该对象特有的初始化代码
+ */
+Card.prototype.init=function(params){
+    bind_params(this, params);
+};
+
+Card.prototype.construct = function (params) {
+
+    var container_id = params.cid;
 
     this.self = root.document.getElementById(container_id);
 
@@ -755,10 +801,6 @@ var Card = function (container_id) {
         // 显示debug信息 
         verbose: false
     };
-
-    for (key in gset) {
-        this.settings[key] = gset[key];
-    }
 
     /* 
      * CARD内部使用的变量，设个奇怪的名包装起来不用占太多变量名。
@@ -776,8 +818,14 @@ var Card = function (container_id) {
         event_flag: false
     };
 
+
+
+    Lib.expand(this.settings, gvars.settings, params.settings);
+
     this.f = {};
 
+    var key;
+    
     for (key in funcs) {
         this.f[key] = funcs[key].bind(this);
     }
@@ -807,7 +855,7 @@ Card.prototype.el = function (key, obj) {
     if (obj === undefined) {
         var id;
         if (!(key in this.cjsv.ids)) {
-            id = this.settings.header + '_' + key + '_' + (cur_serial_id++) + '_' + Lib.rand(8);
+            id = this.settings.header + '_' + key + '_' + (gvars.cur_serial_id++) + '_' + Lib.rand(8);
             this.cjsv.ids[key] = id;
         } else {
             id = this.cjsv.ids[key];
@@ -840,10 +888,6 @@ Card.prototype.show = function () {
 Card.prototype.refresh = function () {
     //render.bind(this)();
     if (this.cjsv.event_flag) {
-        for (var key in this.cjsv.timer) {
-            this.f.clear_timer(key);
-        }
-
         call_method.bind(this)('remove_event', true);
         release_event.bind(this)();
         this.cjsv.event_flag = false;
@@ -884,50 +928,6 @@ Card.prototype.refresh = function () {
     return this;
 };
 
-// 关键方法，生成、绑定、解绑事件，生成、显示界面，数据处理。
-//function render() {
-//    if (this.cjsv.event_flag) {
-//        for (var key in this.cjsv.timer) {
-//            this.f.clear_timer(key);
-//        }
-//
-//        call_method.bind(this)('remove_event', true);
-//        release_event.bind(this)();
-//        this.cjsv.event_flag = false;
-//    }
-//
-//    for (var key in this.cjsv.ids) {
-//        if (this.cjsv.objs[key]) {
-//            this.cjsv.objs[key] = null;
-//            delete this.cjsv.objs[key];
-//        }
-//        delete this.cjsv.ids[key];
-//    }
-//
-//    call_method.bind(this)('data_parser');
-//    this.self.innerHTML = this.gen_html();
-//    call_method.bind(this)('before_add_event');
-//    if (this.el() > 0 && this.settings.add_event) {
-//        var evh = call_method.bind(this)('gen_ev_handler', true);
-//
-//        if (!(Lib.isArray(evh) || Lib.isObject(evh))) {
-//            throw new Error('Card.cjsv.ev_handler should be [func1(), ... ] or { name1:func1(), ... }');
-//        }
-//
-//        for (var key in evh) {
-//            this.cjsv.ev_handler[key] = evh[key].bind(this);
-//        }
-//
-//        evh = null;
-//
-//        if (!this.cjsv.event_flag) {
-//            call_method.bind(this)('add_event', true);
-//            this.cjsv.event_flag = true;
-//        }
-//    }
-//    call_method.bind(this)('after_add_event');
-//    return this;
-//}
 
 /* 
  * 销毁时进行一些清理工作。
@@ -937,10 +937,6 @@ Card.prototype.refresh = function () {
  * };
  */
 Card.prototype.destroy = function () {
-
-    for (var key in this.cjsv.timer) {
-        this.f.clear_timer(key);
-    }
 
     if (this.cjsv.event_flag) {
         call_method.bind(this)('remove_event', true);
@@ -982,21 +978,29 @@ Card.prototype.gen_html = function () {
 
 /* global Lib, Card, root */
 
-var Page = function (cid, cards, style) {
+//var Page = function (cid, cards, style) {
+var Page = function (params) {
     // style={'cards':css_name,'card':css_name};
+    var cid = params['cid'],
+            cards = params.cards;
+
     if (!(Lib.isString(cid) && Lib.isArray(cards))) {
-        log('cid:', cid, ' cards:', cards);
+        // log('cid:', cid, ' cards:', cards);
         throw new Error('Error: new Page(cid,[ card1, card2, ...] )');
     }
+    Card.call(this, params);
 
-    Card.call(this, cid);
-    this.style = style || null;
-    this.cards = cards;
-    this.settings.header = 'page';
-    this.children = [];
 };
 
 inherit(Page, Card);
+
+Page.prototype.init = function (params) {
+    this.style = params.style || null;
+    this.cards = params.cards;
+    this.settings.header = 'page';
+    this.children = [];
+    bind_params(this, params, ['style', 'cards']);
+};
 
 Page.prototype.name = 'PAGE';
 
@@ -1024,7 +1028,7 @@ Page.prototype.gen_html = function () {
 Page.prototype.after_add_event = function () {
     this.clean_up();
     //log('page.this', this);
-    
+
     function get_obj_from_string(str) {
         var obj = root;
         var s = str.split('.');
@@ -1033,30 +1037,46 @@ Page.prototype.after_add_event = function () {
         }
         return obj;
     }
-    
+
     for (var i = 0; i < this.cards.length; i++) {
-        this.children.push(get_obj_from_string(this.cards[i])(this.el(i)).show());
+        var c = get_obj_from_string(this.cards[i]);
+        var o = c(this.el(i));
+        // log('str', this.cards[i], ' c', c, ' o', o);
+        this.children.push(o.show());
     }
 };
 /* global Card, Lib */
 
-var Panel = function (cid, pages, style) {
+var Panel = function (params) {
     //log('pages.type:', Lib.type(pages));
+    var cid = params.cid,
+            pages = params.pages,
+            style = params.style;
+
     if (!(Lib.isString(cid) && Lib.type(pages) === 'Object')) {
         log('cid:', cid, ' pages:', pages, ' style:', style);
         throw new Error('Error: new Panel(cid,{name1:[card1, card2, ...],name2:[card, ...], ... )');
     }
-    Card.call(this, cid);
+
+    Card.call(this, params);
+
+
+
+};
+
+inherit(Panel, Card);
+
+Panel.prototype.init = function (params) {
+    var pages = params.pages;
     // style={'tags':css,'tag_active':css,'tag_normal':css,'page':css,'card':css};
-    this.style = style || null;
+    this.style = params.style || null;
     this.tags = Object.keys(pages);
     this.pages = pages;
     this.child = null;
     this.settings.header = 'panel';
     this.settings.add_event = true;
+    bind_params(this, params, ['style', 'pages']);
 };
-
-inherit(Panel, Card);
 
 // I really don't know why I like to set a name.
 Panel.prototype.name = 'PANEL';
@@ -1100,11 +1120,14 @@ Panel.prototype.gen_ev_handler = function () {
                     this.el(id, true).setAttribute('class', this.style['tag_active']);
                 }
                 var page;
+                var p = {
+                    cid: this.el(this.tags.length),
+                    cards: this.pages[this.tags[id]]
+                };
                 if (this.style && this.style['card']) {
-                    page = new Page(this.el(this.tags.length), this.pages[this.tags[id]], {'card': this.style['card']});
-                } else {
-                    page = new Page(this.el(this.tags.length), this.pages[this.tags[id]]);
+                    p['style'] = {'card': this.style['card']};
                 }
+                page = new Page(p);
                 this.child = page.show();
                 page = null;
             });
@@ -1131,73 +1154,29 @@ function Create(params) {
         throw new Error('CardJS.Create({type:\'Card/Page/Panel\', settings:{header:\'card\', gen_html:function(){}, ...} });');
     }
 
-    function bind_params(o, p) {
-        var skip = {'cards': null, 'type': null, 'settings': null, 'pages': null, 'style': null};
-
-        for (var key in p) {
-            if (!(key in skip)) {
-                if (Lib.isFunction(p[key])) {
-                    o[key] = p[key].bind(o);
-                } else {
-                    o[key] = p[key];
-                }
-            }
-        }
-    }
-
-    if (!('cid' in params)) {
-        //throw new Error('CardJS.Create(params): params must have key cid');
-        if (params.type === 'package') {
-            var o = new Package(params);
-            bind_params(o, params);
-            if (Lib.isFunction(o.init)) {
-                o.init.bind(o)();
-            }
-            return o;
-        }
-        return function (cid) {
-            params.cid = cid;
-            //log('params:', p);
+    if (!('cid' in params) && (params.type !== 'package')) {
+        var f = function (container_id) {
+            params['cid'] = container_id;
             return Create(params);
         };
+        return f;
     }
 
     var o = null;
-    var style = undefined;
-    var cid = params['cid'];
 
     switch (params['type']) {
+        case('package'):
+            o = new Package(params);
+            break;
         case('page'):
-            if (!('cards' in params)) {
-                throw new Error('CardJS.Create(): page must contain cards.');
-            }
-            if ('style' in params) {
-                style = params['style'];
-            }
-            o = new Page(cid, params['cards'], style);
+            o = new Page(params);
             break;
         case('panel'):
-            if (!('pages' in params)) {
-                throw new Error('CardJS.Create(): page must contain pages.');
-            }
-            if ('style' in params) {
-                style = params['style'];
-            }
-            o = new Panel(cid, params['pages'], style);
+            o = new Panel(params);
             break;
         default:
-            o = new Card(cid);
-            break;
+            o = new Card(params);
     }
-
-    if ('settings' in params) {
-        Lib.expand(o.settings, params['settings']);
-    }
-
-    bind_params(o, params);
-
-    style = null;
-    params = null;
 
     return o;
 }
@@ -1205,7 +1184,10 @@ function Create(params) {
 /* global Card, Set, Create, Lib */
 
 var exports = {
-    card: Card,
+    card: function(cid){
+        var o=new Card({cid:cid})
+        return o;
+    },
     lib: Lib,
     set: Set,
     create: Create

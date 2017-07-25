@@ -1,4 +1,4 @@
-/* global root, token, Lib */
+/* global root, gvars, Lib */
 
 // cardjs.card.f
 
@@ -165,8 +165,8 @@ var funcs = {
             var rsp = root.JSON.parse(raw_rsp);
             if (rsp && rsp.tk) {
                 //log('update token, rsp:',rsp);
-                token = rsp.tk;
-                Lib.cookie_set('tk', token);
+                gvars.token = rsp.tk;
+                Lib.cookie_set('tk', gvars.token);
             }
             if (rsp && rsp.status && rsp.data) {
                 //function ok
@@ -178,10 +178,10 @@ var funcs = {
             func = null;
         }.bind(this);
 
-        if (token === null) {
-            token = Lib.cookie_get('tk');
+        if (gvars.token === null) {
+            gvars.token = Lib.cookie_get('tk');
         }
         //log('op/data/tk',op,param,token);
-        xhr.send(encodeURI('tk=' + token + '&op=' + op + '&data=' + param));
+        xhr.send(encodeURI('tk=' + gvars.token + '&op=' + op + '&data=' + param));
     }
 };

@@ -1,13 +1,17 @@
 /* global Lib */
 
-// 全局设置
-var gset = {};
+var gvars = {
 
-// 缓存fetch中的token用于身份认证.
-var token = null;
+    // 全局设置
+    settings: {},
 
-// 缓存自动生成的id序列号，保证id的唯一性
-var cur_serial_id = 0;
+    // 缓存fetch中的token用于身份认证.
+    token: null,
+
+    // 缓存自动生成的id序列号，保证id的唯一性
+    cur_serial_id: 0
+};
+
 
 var root = window;
 var log = root.console.log.bind(root.console);
@@ -18,7 +22,7 @@ var Set = function (params) {
         throw new Error('Error: CardJS.Lib.set( {key1:value1,key2:value2, ... });');
     }
     for (var key in params) {
-        gset[key] = params[key];
+        gvars.settings[key] = params[key];
     }
 };
 
@@ -48,10 +52,36 @@ function call_method(fn, debug) {
     return false;
 }
 
+function bind_params(obj, params, skip) {
+
+    var s = ['cid', 'type', 'settings'];
+
+    if (Lib.isArray(skip)) {
+        for (var i = 0; i < skip.length; i++) {
+            s.push(skip[i]);
+        }
+    }
+
+    for (var key in params) {
+        if (s.indexOf(key) < 0) {
+            if (Lib.isFunction(params[key])) {
+                obj[key] = params[key].bind(obj);
+            } else {
+                obj[key] = params[key];
+            }
+        }
+    }
+}
+
 // 只有card对象使用，以后移进card对象中
 // 自动释放通过 card.f.on 绑定的事件。后面的 remove_event 是手动。
 function release_event() {
     var key;
+
+    for (var key in this.cjsv.timer) {
+        this.f.clear_timer(key);
+    }
+
     if (this.cjsv.evs.length > 0) {
         //log('before release_event:', this.cjsv.evs);
         var e = this.cjsv.evs;
