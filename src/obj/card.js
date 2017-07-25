@@ -1,4 +1,4 @@
-/* global root, gvars, Cache, Lib, call_method, funcs, bind_params, Paper */
+/* global root, gvars, Cache, Lib, call_method, bind_params, Paper */
 
 // card对象
 

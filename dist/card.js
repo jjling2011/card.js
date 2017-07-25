@@ -67,7 +67,7 @@ function call_method(fn, debug) {
         return(this[fn]());
     }
     if (debug && this.settings.verbose) {
-        log('Call undefine method: Card.prototype.funcs.' + fn + '()');
+        log('Call undefine method: this.f.' + fn + '()');
     }
     return false;
 }
@@ -357,7 +357,7 @@ Lib.gen_key = (function () {
 
 // cardjs.card.f
 
-var funcs = {
+var Funcs = {
     trigger: function (key) {
         //log(this);
         if (!(key in this.cjsv.ev_handler)) {
@@ -541,11 +541,9 @@ var funcs = {
     }
 };/* global root, Lib */
 
-var Cache = (function () {
-    var d = {};  // 缓存数据
-    var e = {};  // 清除缓存的神奇字符串
+var Event = (function () {
     var f = {};  // event的神奇字符串和对应函数
-    var r={
+    var r = {
         event: function (ev, func, status) {
             /**
              * 如果 status=false 则 delete e[ev][this.settings.key]
@@ -620,10 +618,17 @@ var Cache = (function () {
             }
             el = null;
             return flag;
-        },
-//        cc_debug: function () {
-//            log('d:', d, ' e:', e);
-//        },
+        }
+    };
+    return r;
+}());/* global root, Lib */
+
+var Cache = (function () {
+    var d = {};  // 缓存数据
+    var e = {};  // 清除缓存的神奇字符串
+    
+    var r = {
+
         clear_cache: function (ev, status) {
             /**
              * 如果 status=undefined 触发ev定义的事件
@@ -693,7 +698,7 @@ var Cache = (function () {
         }
     };
     return (r);
-}());/* global root, gvars, Cache, Lib, call_method, funcs, bind_params */
+}());/* global root, gvars, Cache, Event, Lib, call_method, Funcs, bind_params */
 
 // card对象的你对象
 
@@ -738,17 +743,12 @@ var Paper = function (params) {
 
     this.f = {};
 
-    var key;
-
-    for (key in funcs) {
-        this.f[key] = funcs[key].bind(this);
+    var d = [Funcs, Cache, Event];
+    for (var i = 0; i < d.length; i++) {
+        for (var k in d[i]) {
+            this.f[k] = d[i][k].bind(this);
+        }
     }
-
-    for (key in Cache) {
-        this.f[key] = Cache[key].bind(this);
-    }
-
-    key = null;
 
 };
 
@@ -906,12 +906,12 @@ Paper.prototype.gen_html = function () {
 };
 
 
-/* global gvars, Lib, funcs, Cache, call_method */
+/* global gvars, Lib, Funcs, Cache, call_method, Event */
 
 var Package = function (params) {
-    
+
     // 配合this.f.fetch()
-    this.self = true; 
+    this.self = true;
 
     this.settings = {
         key: 'pkgshare'
@@ -925,11 +925,14 @@ var Package = function (params) {
     };
 
     this.f = {
-        fetch: funcs.fetch.bind(this)
+        fetch: Funcs.fetch.bind(this)
     };
 
-    for (var k in Cache) {
-        this.f[k] = Cache[k].bind(this);
+    var d = [Cache, Event];
+    for (var i = 0; i < d.length; i++) {
+        for (var k in d[i]) {
+            this.f[k] = d[i][k].bind(this);
+        }
     }
 
     bind_params(this, params, ['type']);
@@ -957,7 +960,7 @@ Package.prototype.destroy = function () {
         this[key] = null;
     }
     this.self = false;
-};/* global root, gvars, Cache, Lib, call_method, funcs, bind_params, Paper */
+};/* global root, gvars, Cache, Lib, call_method, bind_params, Paper */
 
 // card对象
 

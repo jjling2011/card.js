@@ -2,7 +2,7 @@
 
 // cardjs.card.f
 
-var funcs = {
+var Funcs = {
     trigger: function (key) {
         //log(this);
         if (!(key in this.cjsv.ev_handler)) {

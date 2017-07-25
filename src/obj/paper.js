@@ -1,4 +1,4 @@
-/* global root, gvars, Cache, Lib, call_method, funcs, bind_params */
+/* global root, gvars, Cache, Event, Lib, call_method, Funcs, bind_params */
 
 // card对象的你对象
 
@@ -43,17 +43,12 @@ var Paper = function (params) {
 
     this.f = {};
 
-    var key;
-
-    for (key in funcs) {
-        this.f[key] = funcs[key].bind(this);
+    var d = [Funcs, Cache, Event];
+    for (var i = 0; i < d.length; i++) {
+        for (var k in d[i]) {
+            this.f[k] = d[i][k].bind(this);
+        }
     }
-
-    for (key in Cache) {
-        this.f[key] = Cache[key].bind(this);
-    }
-
-    key = null;
 
 };
 

@@ -47,7 +47,7 @@ function call_method(fn, debug) {
         return(this[fn]());
     }
     if (debug && this.settings.verbose) {
-        log('Call undefine method: Card.prototype.funcs.' + fn + '()');
+        log('Call undefine method: this.f.' + fn + '()');
     }
     return false;
 }

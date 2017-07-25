@@ -1,9 +1,9 @@
-/* global gvars, Lib, funcs, Cache, call_method */
+/* global gvars, Lib, Funcs, Cache, call_method, Event */
 
 var Package = function (params) {
-    
+
     // 配合this.f.fetch()
-    this.self = true; 
+    this.self = true;
 
     this.settings = {
         key: 'pkgshare'
@@ -17,11 +17,14 @@ var Package = function (params) {
     };
 
     this.f = {
-        fetch: funcs.fetch.bind(this)
+        fetch: Funcs.fetch.bind(this)
     };
 
-    for (var k in Cache) {
-        this.f[k] = Cache[k].bind(this);
+    var d = [Cache, Event];
+    for (var i = 0; i < d.length; i++) {
+        for (var k in d[i]) {
+            this.f[k] = d[i][k].bind(this);
+        }
     }
 
     bind_params(this, params, ['type']);
