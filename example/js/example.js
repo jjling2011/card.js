@@ -1,6 +1,6 @@
 // GPL v3
 
-/* global sain,cardjs */
+/* global sain,cjs */
 
 /*
  * CardJS导出以下三个对象：
@@ -28,7 +28,7 @@ var web = {
  *  5.add_event 绑定事件与响应函数
  */
 web.o.card = function (cid) {
-    return (cardjs.create({
+    return (cjs({
         cid: cid,
         gen_html: function () {
             return '<div class="card-div" style="color:#999;font-size:14px">这是一个什么都没有的卡片</div>';
@@ -37,7 +37,7 @@ web.o.card = function (cid) {
 };
 
 // 创建一个可以响应事件及共享数据的Card对象。
-web.o.card_ev = cardjs.create({
+web.o.card_ev = cjs({
     settings: {header: 'tcard', add_event: true},
     gen_html: function () {
         //console.log('gen_html:',this);
@@ -65,7 +65,7 @@ web.o.card_ev = cardjs.create({
                 this.f.clear_timer();
             },
             'cache': function () {
-                var content = cardjs.lib.rand(16);
+                var content = cjs.lib.rand(16);
                 this.f.cache(content);
                 this.el('content_data', true).innerHTML = '共享数据：' + content;
             },
@@ -84,7 +84,7 @@ web.o.card_ev = cardjs.create({
 });
 
 // 多个卡合并起来动态切换。
-web.o.panel = cardjs.create({
+web.o.panel = cjs({
     type: 'panel',
     pages: {
         '动态获取数据': ['web.o.card_fetch'],
@@ -102,7 +102,7 @@ web.o.panel = cardjs.create({
 
 web.o.card_fetch = function (container_id) {
 
-    return(cardjs.create({
+    return(cjs({
         cid: container_id,
         settings: {
             header: 'fetch',
@@ -118,7 +118,7 @@ web.o.card_fetch = function (container_id) {
             return ([function () {
                     this.f.fetch('checklogin', ['Amy', 'Adam'], function (data) {
                         //console.log(data);
-                        this.el(1, true).innerHTML = cardjs.lib.html_escape(window.JSON.stringify(data));
+                        this.el(1, true).innerHTML = cjs.lib.html_escape(window.JSON.stringify(data));
                     });
                     //fd.destroy();
                 }]);
@@ -131,7 +131,7 @@ web.o.card_fetch = function (container_id) {
 
 
 web.o.cboard = function (container_id) {
-    var cb = new cardjs.card(container_id);
+    var cb = new cjs.card(container_id);
 
     cb.f.merge({
         header: 'chess_boardd',

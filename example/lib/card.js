@@ -1,5 +1,9 @@
-// https://github.com/jjling2011/card.js
-// GPL-3.0
+/**
+ * https://github.com/jjling2011/card.js
+ * ver 0.001.20170920
+ * cjs(), cjs.card, cjs.set, cjs.lib
+ * GPL-3.0
+*/
 
 /* global define */
 
@@ -14,7 +18,7 @@
     } else {
         context[name] = definition();
     }
-})('cardjs', this, function () {
+})('cjs', this, function () {
 
     "use strict";
 
@@ -1198,14 +1202,26 @@ function Create(params) {
 
 /* global Card, Set, Create, Lib */
 
-var exports = {
-    card: function(cid){
-        var o=new Card({cid:cid});
-        return o;
-    },
-    lib: Lib,
-    set: Set,
-    create: Create
+Create.card = function (cid) {
+    var o = new Card({cid: cid});
+    return o;
 };
+
+Create.lib = Lib;
+Create.set = Set;
+
+var exports = Create;
+
+/*
+ var exports = {
+ card: function (cid) {
+ var o = new Card({cid: cid});
+ return o;
+ },
+ lib: Lib,
+ set: Set,
+ create: Create
+ };
+ */
     return (exports);
 });

@@ -1,5 +1,9 @@
-// https://github.com/jjling2011/card.js
-// GPL-3.0
+/**
+ * https://github.com/jjling2011/card.js
+ * ver 0.001.20170920
+ * cjs(), cjs.card, cjs.set, cjs.lib
+ * GPL-3.0
+*/
 
 /* global define */
 
@@ -14,7 +18,7 @@
     } else {
         context[name] = definition();
     }
-})('cardjs', this, function () {
+})('cjs', this, function () {
 
     "use strict";
 
