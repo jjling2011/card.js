@@ -1,4 +1,4 @@
-/* global gvars, Lib, Funcs, Cache, call_method, Event */
+/* global gvars, Lib, Funcs, Cache, call_method, CjsEvent */
 
 var Package = function (params) {
 
@@ -20,7 +20,7 @@ var Package = function (params) {
         fetch: Funcs.fetch.bind(this)
     };
 
-    var d = [Cache, Event];
+    var d = [Cache, CjsEvent];
     for (var i = 0; i < d.length; i++) {
         for (var k in d[i]) {
             this.f[k] = d[i][k].bind(this);

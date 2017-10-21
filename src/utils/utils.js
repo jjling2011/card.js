@@ -17,7 +17,7 @@ var root = window;
 var log = root.console.log.bind(root.console);
 //var log=function(){};
 
-var Set = function (params) {
+var Setup = function (params) {
     if (!(Lib.type(params) === 'Object')) {
         throw new Error('Error: CardJS.Lib.set( {key1:value1,key2:value2, ... });');
     }

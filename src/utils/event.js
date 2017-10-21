@@ -1,6 +1,6 @@
 /* global root, Lib */
 
-var Event = (function () {
+var CjsEvent = (function () {
     var f = {};  // event的神奇字符串和对应函数
     var r = {
         event: function (ev, func, status) {

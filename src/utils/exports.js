@@ -1,23 +1,12 @@
-/* global Card, Set, Create, Lib */
+/* global Card, Setup, Create, Lib */
 
-Create.card = function (cid) {
+var exports = Create;
+
+exports.card = function (cid) {
     var o = new Card({cid: cid});
     return o;
 };
 
-Create.lib = Lib;
-Create.set = Set;
+exports.lib = Lib;
+exports.set = Setup;
 
-var exports = Create;
-
-/*
- var exports = {
- card: function (cid) {
- var o = new Card({cid: cid});
- return o;
- },
- lib: Lib,
- set: Set,
- create: Create
- };
- */

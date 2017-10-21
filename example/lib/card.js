@@ -41,7 +41,7 @@ var root = window;
 var log = root.console.log.bind(root.console);
 //var log=function(){};
 
-var Set = function (params) {
+var Setup = function (params) {
     if (!(Lib.type(params) === 'Object')) {
         throw new Error('Error: CardJS.Lib.set( {key1:value1,key2:value2, ... });');
     }
@@ -545,7 +545,7 @@ var Funcs = {
     }
 };/* global root, Lib */
 
-var Event = (function () {
+var CjsEvent = (function () {
     var f = {};  // event的神奇字符串和对应函数
     var r = {
         event: function (ev, func, status) {
@@ -702,7 +702,7 @@ var Cache = (function () {
         }
     };
     return (r);
-}());/* global root, gvars, Cache, Event, Lib, call_method, Funcs, bind_params */
+}());/* global root, gvars, Cache, CjsEvent, Lib, call_method, Funcs, bind_params */
 
 // card对象的你对象
 
@@ -747,7 +747,7 @@ var Paper = function (params) {
 
     this.f = {};
 
-    var d = [Funcs, Cache, Event];
+    var d = [Funcs, Cache, CjsEvent];
     for (var i = 0; i < d.length; i++) {
         for (var k in d[i]) {
             this.f[k] = d[i][k].bind(this);
@@ -910,7 +910,7 @@ Paper.prototype.gen_html = function () {
 };
 
 
-/* global gvars, Lib, Funcs, Cache, call_method, Event */
+/* global gvars, Lib, Funcs, Cache, call_method, CjsEvent */
 
 var Package = function (params) {
 
@@ -932,7 +932,7 @@ var Package = function (params) {
         fetch: Funcs.fetch.bind(this)
     };
 
-    var d = [Cache, Event];
+    var d = [Cache, CjsEvent];
     for (var i = 0; i < d.length; i++) {
         for (var k in d[i]) {
             this.f[k] = d[i][k].bind(this);
@@ -1200,28 +1200,18 @@ function Create(params) {
     return o;
 }
 
-/* global Card, Set, Create, Lib */
+/* global Card, Setup, Create, Lib */
 
-Create.card = function (cid) {
+var exports = Create;
+
+exports.card = function (cid) {
     var o = new Card({cid: cid});
     return o;
 };
 
-Create.lib = Lib;
-Create.set = Set;
+exports.lib = Lib;
+exports.set = Setup;
 
-var exports = Create;
 
-/*
- var exports = {
- card: function (cid) {
- var o = new Card({cid: cid});
- return o;
- },
- lib: Lib,
- set: Set,
- create: Create
- };
- */
     return (exports);
 });
